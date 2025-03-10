@@ -61,3 +61,6 @@ class Bullet(Point):
         Point.move(self)
         if (self.ttl <= 0):
             self.shooter.bullets.remove(self)
+
+class Sword(Point):
+
