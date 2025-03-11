@@ -63,4 +63,10 @@ class Bullet(Point):
             self.shooter.bullets.remove(self)
 
 class Sword(Point):
+    
+    def __init__(self, position, heading, ttl, stage):
+        self.ttl = ttl
+
+    def move(self):
+        Point.move(self)
 

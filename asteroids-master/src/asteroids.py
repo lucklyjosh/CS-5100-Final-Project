@@ -44,6 +44,7 @@ from soundManager import *
 class Asteroids():
 
     explodingTtl = 180
+    leaderboard = []
 
     def __init__(self):
         self.stage = Stage('Atari Asteroids', (1024, 768))
@@ -58,6 +59,7 @@ class Asteroids():
         self.score = 0
         self.ship = None
         self.lives = 0
+        self.leaderboard = []
 
     def initialiseGame(self):
         self.gameState = 'playing'
@@ -192,6 +194,7 @@ class Asteroids():
 
             if self.lives == 0:
                 self.ship.visible = False
+                self.addToLeaderboard(self.score)
             else:
                 self.createNewShip()
 
@@ -414,7 +417,10 @@ class Asteroids():
             playSound("extralife")
             self.nextLife += 10000
             self.addLife(self.lives)
-
+    
+    def addToLeaderboard(self, score):
+        self.leaderboard.append(score)
+        self.leaderboard.sort(reverse=True)
 
 # Script to run the game
 if not pygame.font:
