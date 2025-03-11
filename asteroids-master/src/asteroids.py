@@ -195,6 +195,7 @@ class Asteroids():
             if self.lives == 0:
                 self.ship.visible = False
                 self.addToLeaderboard(self.score)
+                print(self.leaderboard)
             else:
                 self.createNewShip()
 
