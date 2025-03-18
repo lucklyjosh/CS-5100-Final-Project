@@ -87,8 +87,16 @@ class Rock(VectorSprite):
         
         # Original Asteroid didn't have spinning rocks but they look nicer
         self.angle += 1
+
+    # call base class
+    def getPos(self):
+        return VectorSprite.getPos(self)
     
-    
+    def getVelocity(self):
+        return VectorSprite.getVelocity(self)
+
+    def getHeading(self):
+        return VectorSprite.getHeading(self)
 #    def destroyed(self):
         
 
@@ -170,5 +178,8 @@ class Saucer(Shooter):
             shotFired = Shooter.fireBullet(self, heading, self.bulletTtl[self.saucerType], self.bulletVelocity)
             if shotFired:
                 playSound("sfire")
+
+    def getPos(self):
+        return self.position
             
 # end    

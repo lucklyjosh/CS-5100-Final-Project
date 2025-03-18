@@ -60,6 +60,7 @@ class Asteroids():
         self.lives = 0
         self.level = 1
 
+
     def initialiseGame(self):
         self.gameState = 'playing'
         [self.stage.removeSprite(sprite) for sprite in self.rockList]  # clear old rocks
@@ -77,6 +78,24 @@ class Asteroids():
 
         self.createRocks(self.numRocks)
         self.secondsCount = 1
+
+        rockState = {}
+        for index, rock in enumerate(self.rockList):
+            rockState[index]['position'] = rock.getPos
+            rockState[index]['velocity'] = rock.getVelocity
+            rockState[index]['heading'] = rock.getHeading
+
+        self.current_state = {
+            'alien': None, # None or (x,y)
+            'ship': {
+                'pos': self.ship.getPos,
+                'heading': self.ship.getHeading,
+            }, # the whole Ship object
+            'rocks': rockState
+        }
+
+        # returns observation, reward, and done
+        return self.get_observation(), 0, False
 
     def createNewShip(self):
         if self.ship:
@@ -415,6 +434,16 @@ class Asteroids():
             playSound("extralife")
             self.nextLife += 10000
             self.addLife(self.lives)
+
+    def step(self, action):
+        """Performs one step in the environment"""
+        observation = self.get_observation()
+        return observation, reward, done, info
+    
+    def get_observation(self):
+        # todo
+
+
 
 
 # Script to run the game

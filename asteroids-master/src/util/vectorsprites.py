@@ -109,6 +109,15 @@ class VectorSprite:
 
         return None
 
+    def getPos(self):
+        return self.position
+    
+    def getVelocity(self):
+        return self.velocity
+    
+    def getHeading(self):
+        return self.heading
+
 # Used for bullets and debris
 
 
