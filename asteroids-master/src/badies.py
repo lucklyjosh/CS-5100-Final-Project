@@ -89,11 +89,9 @@ class Rock(VectorSprite):
         self.angle += 1
 
     # call base class
+    
     def getPos(self):
         return VectorSprite.getPos(self)
-    
-    def getVelocity(self):
-        return VectorSprite.getVelocity(self)
 
     def getHeading(self):
         return VectorSprite.getHeading(self)

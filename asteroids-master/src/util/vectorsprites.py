@@ -112,9 +112,6 @@ class VectorSprite:
     def getPos(self):
         return self.position
     
-    def getVelocity(self):
-        return self.velocity
-    
     def getHeading(self):
         return self.heading
 

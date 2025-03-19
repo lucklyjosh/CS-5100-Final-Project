@@ -28,6 +28,7 @@
 # j for toggle showing FPS
 # o for frame advance whilst paused
 
+from typing import List
 import pygame
 import sys
 import os
@@ -70,7 +71,7 @@ class Asteroids():
         self.createNewShip()
         self.createLivesList()
         self.score = 0
-        self.rockList = []
+        self.rockList: List[Rock] = []
         # Set level 1 
         self.level = 1
         self.numRocks = 1
@@ -81,15 +82,17 @@ class Asteroids():
 
         rockState = {}
         for index, rock in enumerate(self.rockList):
-            rockState[index]['position'] = rock.getPos
-            rockState[index]['velocity'] = rock.getVelocity
-            rockState[index]['heading'] = rock.getHeading
+            rockState[index] = {
+                'position': rock.getPos(), # Vector(x,y)
+                'heading': rock.getHeading() # Vector(x,y)
+            }
+        print(rockState[0]['position'])
 
         self.current_state = {
-            'alien': None, # None or (x,y)
+            'alien': None, # None or Vector(x,y)
             'ship': {
-                'pos': self.ship.getPos,
-                'heading': self.ship.getHeading,
+                'position': self.ship.getPos(), # Vector(x,y)
+                'heading': self.ship.getHeading(), # Vector(x,y)
             }, # the whole Ship object
             'rocks': rockState
         }
@@ -127,7 +130,6 @@ class Asteroids():
             self.rockList.append(newRock)
 
     def playGame(self):
-
         clock = pygame.time.Clock()
 
         frameCount = 0.0
@@ -437,11 +439,13 @@ class Asteroids():
 
     def step(self, action):
         """Performs one step in the environment"""
-        observation = self.get_observation()
-        return observation, reward, done, info
-    
-    def get_observation(self):
-        # todo
+        observation = self.current_state()
+        reward = 0
+        done = False
+        if self.lives == 0 and self.gameState == 'exploding':
+            done = True
+
+        return observation, reward, done
 
 
 
@@ -452,8 +456,8 @@ if not pygame.font:
 if not pygame.mixer:
     print('Warning, sound disabled')
 
-initSoundManager()
-game = Asteroids()  # create object game from class Asteroids
-game.playGame()
+# initSoundManager()
+# game = Asteroids()  # create object game from class Asteroids
+# game.playGame()
 
 ####
