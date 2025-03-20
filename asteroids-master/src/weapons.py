@@ -19,14 +19,15 @@
 import random
 from util.vectorsprites import *
 from util import *
+import pygame
 
+class Weapon(VectorSprite):
 
-class Shooter(VectorSprite):
-
-    def __init__(self, position, heading, pointlist, stage):
+    def __init__(self, position, heading, pointlist, stage, weapons):
         VectorSprite.__init__(self, position, heading, pointlist)
         self.bullets = []
         self.stage = stage
+        self.weapons = ["Shooter", "Sword"]
 
     def fireBullet(self, heading, ttl, velocity):
         if (len(self.bullets) < self.maxBullets):
@@ -46,6 +47,18 @@ class Shooter(VectorSprite):
 
         return collisionDetected
 
+    def displaySword(self, ship):
+        sword = Sword(position, ship, heading, ttl, stage)
+         
+
+    def swordCollision(self, target):
+         collisionDetected = False
+         sword = Sword(position, ship, heading, ttl, stage)
+         if sword.ttl > 0 and target.collidesWith(sword):
+               colisionDetected = True
+               sword.ttl = 0
+         return collisionDetected 
+
 # Bullet class
 
 
@@ -64,9 +77,13 @@ class Bullet(Point):
 
 class Sword(Point):
     
-    def __init__(self, position, heading, ttl, stage):
+    def __init__(self, position, ship, heading, ttl, stage):
+        self.ship = ship
         self.ttl = ttl
 
     def move(self):
         Point.move(self)
 
+    def swing():
+        
+        
