@@ -32,7 +32,7 @@ class Stage:
         if dimensions == None:
             dimensions = pygame.display.list_modes()[0]
 
-        pygame.display.set_mode(dimensions, FULLSCREEN)
+        pygame.display.set_mode(dimensions)
         pygame.mouse.set_visible(False)
 
         # pygame.display.set_mode(dimensions)
@@ -68,7 +68,7 @@ class Stage:
             if sprite.position.x < 0:
                 sprite.position.x = self.width
 
-            if sprite.position.x > self.width:
+            if sprite.position.x >  self.width:
                 sprite.position.x = 0
 
             if sprite.position.y < 0:
@@ -76,3 +76,4 @@ class Stage:
 
             if sprite.position.y > self.height:
                 sprite.position.y = 0
+

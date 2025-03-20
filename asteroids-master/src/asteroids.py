@@ -28,6 +28,7 @@
 # j for toggle showing FPS
 # o for frame advance whilst paused
 
+from typing import List
 import pygame
 import sys
 import os
@@ -60,6 +61,7 @@ class Asteroids():
         self.lives = 0
         self.level = 1
 
+
     def initialiseGame(self):
         self.gameState = 'playing'
         [self.stage.removeSprite(sprite) for sprite in self.rockList]  # clear old rocks
@@ -69,7 +71,7 @@ class Asteroids():
         self.createNewShip()
         self.createLivesList()
         self.score = 0
-        self.rockList = []
+        self.rockList: List[Rock] = []
         # Set level 1 
         self.level = 1
         self.numRocks = 1
@@ -77,6 +79,25 @@ class Asteroids():
 
         self.createRocks(self.numRocks)
         self.secondsCount = 1
+
+        rockState = {}
+        for index, rock in enumerate(self.rockList):
+            rockState[index] = {
+                'position': rock.getPos(), # Vector(x,y)
+                'heading': rock.getHeading() # Vector(x,y)
+            }
+
+        self.current_state = {
+            'alien': None, # None or Vector(x,y)
+            'ship': {
+                'position': self.ship.getPos(), # Vector(x,y)
+                'heading': self.ship.getHeading(), # Vector(x,y)
+            }, # the whole Ship object
+            'rocks': rockState
+        }
+
+        # returns observation, reward, and done
+        return self.current_state, 0, False
 
     def createNewShip(self):
         if self.ship:
@@ -108,7 +129,6 @@ class Asteroids():
             self.rockList.append(newRock)
 
     def playGame(self):
-
         clock = pygame.time.Clock()
 
         frameCount = 0.0
@@ -154,6 +174,64 @@ class Asteroids():
                 self.displayText()
 
             pygame.display.flip()
+
+    def step(self, action):
+        # self.input(action)
+
+        # self.stage.screen.fill((10, 10, 10))
+        self.stage.moveSprites()
+        # self.stage.drawSprites()
+        self.doSaucerLogic()
+        self.displayScore()
+        # if self.showingFPS:
+        #     self.displayFps()  # for debug
+        self.checkScore()
+
+        # Process keys and game states
+        if self.gameState == 'playing':
+            self.agent_playing(action)
+        elif self.gameState == 'exploding':
+            self.exploding()
+        elif self.gameState == 'win':
+            self.displayWinScreen()
+        else:
+            self.displayText()
+
+        rockState = {}
+        for index, rock in enumerate(self.rockList):
+            rockState[index] = {
+                'position': rock.getPos(), # Vector(x,y)
+                'heading': rock.getHeading() # Vector(x,y)
+            }
+
+        alienState = None
+        if self.saucer:
+            alienState = self.saucer.getPos()
+
+        self.current_state = {
+            'alien': alienState, # None or Vector(x,y)
+            'ship': {
+                'position': self.ship.getPos(), # Vector(x,y)
+                'heading': self.ship.getHeading(), # Vector(x,y)
+            }, # the whole Ship object
+            'rocks': rockState
+        }
+
+        done = False
+        if self.lives == 0 and self.gameState == 'exploding':
+            done = True
+
+        return self.current_state, 0, done
+
+    def agent_playing(self, action):
+        if self.lives == 0:
+            self.gameState = 'attract_mode'
+        else:
+            self.processAgentKeys(action)
+            self.checkCollisions()
+            # Level up when all rocks clear.
+            if len(self.rockList) == 0:
+                self.levelUp()
 
     def playing(self):
         if self.lives == 0:
@@ -289,6 +367,25 @@ class Asteroids():
                 if event.key == K_o:
                     self.frameAdvance = True
 
+    def processAgentKeys(self, action):
+        key = pygame.key.get_pressed()
+
+        if action == 'left':
+            self.ship.rotateLeft()
+        elif action == 'right':
+            self.ship.rotateRight()
+
+        if action == 'up':
+            self.ship.increaseThrust()
+            self.ship.thrustJet.accelerating = True
+        else:
+            self.ship.thrustJet.accelerating = False
+
+        if action == 'fire':
+            self.ship.fireBullet()
+        if action == 'hyperspace':
+            self.ship.enterHyperSpace()
+
     def processKeys(self):
         key = pygame.key.get_pressed()
 
@@ -416,6 +513,18 @@ class Asteroids():
             self.nextLife += 10000
             self.addLife(self.lives)
 
+    # def step(self, action):
+    #     """Performs one step in the environment"""
+    #     observation = self.current_state()
+    #     reward = 0
+    #     done = False
+    #     if self.lives == 0 and self.gameState == 'exploding':
+    #         done = True
+
+    #     return observation, reward, done
+
+
+
 
 # Script to run the game
 if not pygame.font:
@@ -423,8 +532,8 @@ if not pygame.font:
 if not pygame.mixer:
     print('Warning, sound disabled')
 
-initSoundManager()
-game = Asteroids()  # create object game from class Asteroids
-game.playGame()
+# initSoundManager()
+# game = Asteroids()  # create object game from class Asteroids
+# game.playGame()
 
 ####
