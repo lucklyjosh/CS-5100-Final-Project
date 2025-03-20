@@ -130,8 +130,8 @@ class Saucer(Shooter):
     bulletVelocity = 5  
     
     def __init__(self, stage, saucerType, ship):                
-        position = Vector2d(0.0, random.randrange(0, stage.height))
-        heading = Vector2d(self.velocities[saucerType], 0.0)
+        self.position = Vector2d(0.0, random.randrange(0, stage.height))
+        self.heading = Vector2d(self.velocities[saucerType], 0.0)
         self.saucerType = saucerType
         self.ship = ship
         self.scoreValue = self.scores[saucerType]
@@ -146,7 +146,7 @@ class Saucer(Shooter):
         
         # Scale the shape and create the VectorSprite
         newPointList = [self.scale(point, self.scales[saucerType]) for point in self.pointlist]
-        Shooter.__init__(self, position, heading, newPointList, stage)
+        Shooter.__init__(self, self.position, self.heading, newPointList, stage)
         
     def move(self):        
         Shooter.move(self)  
@@ -179,5 +179,8 @@ class Saucer(Shooter):
 
     def getPos(self):
         return self.position
+    
+    def getHeading(self):
+        return self.heading
             
 # end    
