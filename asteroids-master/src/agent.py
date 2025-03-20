@@ -15,7 +15,9 @@ class Agent():
         print("hello world")
     
     def play(self):
-        self.game.playGame()
+        game.playGame()
+        # rotate_key = pygame.event.Event(pygame.KEYDOWN, {'key': pygame.K_x})
+        # game.input(rotate_key)
 
     def q_learning(self, num_episodes=10000, gamma=0.9, epsilon=1, decay_rate=0.999):
         obs, reward, done = game.initialiseGame()
@@ -37,4 +39,5 @@ class Agent():
 initSoundManager()
 game = Asteroids()
 agent = Agent()
-agent.q_learning()
+# agent.q_learning()
+agent.play()

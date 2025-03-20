@@ -86,7 +86,6 @@ class Asteroids():
                 'position': rock.getPos(), # Vector(x,y)
                 'heading': rock.getHeading() # Vector(x,y)
             }
-        print(rockState[0]['position'])
 
         self.current_state = {
             'alien': None, # None or Vector(x,y)
@@ -98,7 +97,7 @@ class Asteroids():
         }
 
         # returns observation, reward, and done
-        return self.get_observation(), 0, False
+        return self.current_state, 0, False
 
     def createNewShip(self):
         if self.ship:
