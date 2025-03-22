@@ -25,7 +25,7 @@ class Agent():
             print("🎮 Initializing game...")
             self.game.initialiseGame()
 
-            actions = ['up', 'left', 'right', 'fire', 'hyperspace']
+            actions = ['up', 'left', 'right', 'fire']
             clock = pygame.time.Clock()
 
             print("🖥️ Checking screen surface...")
