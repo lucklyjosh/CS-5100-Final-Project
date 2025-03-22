@@ -14,6 +14,19 @@ class Agent():
     # return binary string
     def hash(self):
         print("hello world")
+        '''
+        - are we in the trajectory of a rock? (will it hit us if we don't move)
+        - is a rock in our cone of vision? (are we facing it and can we shoot it if we fire a bunch and tilt left/right)
+        - how close is the closest rock to us?
+            - 0 = outside first threshold (farthest)
+            - 1 = inside first threshold (middle region)
+            - 2 = inside second threshold (super close, uh oh, hyperspace now)
+        - is alien present?
+        - is the alien in our cone of vision?
+        - how close is the alien to us?
+            - 0 = outside threshold
+            - 1 = inside threshold
+        '''
     
     def play(self):
             print("🚀 Initializing pygame...")
@@ -63,7 +76,7 @@ class Agent():
                 frame_count += 1
                 clock.tick(60)
 
-                if done or frame_count > 300:
+                if done or frame_count > 3000:
                     running = False
 
             pygame.quit()
