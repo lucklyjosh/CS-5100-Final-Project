@@ -151,16 +151,16 @@ class Asteroids():
 
             # pause
             if self.paused and not self.frameAdvance:
-                self.displayPaused()
+                self.stage.displayPaused()
                 continue
 
             self.stage.screen.fill((10, 10, 10))
             self.stage.moveSprites()
             self.stage.drawSprites()
             self.doSaucerLogic()
-            self.displayScore()
+            self.stage.displayScore(self.score)
             if self.showingFPS:
-                self.displayFps()  # for debug
+                self.stage.displayFps()  # for debug
             self.checkScore()
 
             # Process keys and game states
@@ -169,9 +169,9 @@ class Asteroids():
             elif self.gameState == 'exploding':
                 self.exploding()
             elif self.gameState == 'win':
-                self.displayWinScreen()
+                self.stage.displayWinScreen()
             else:
-                self.displayText()
+                self.stage.displayText()
 
             pygame.display.flip()
 
@@ -182,7 +182,7 @@ class Asteroids():
         self.stage.moveSprites()
         # self.stage.drawSprites()
         self.doSaucerLogic()
-        self.displayScore()
+        self.stage.displayScore(self.score)
         # if self.showingFPS:
         #     self.displayFps()  # for debug
         self.checkScore()
@@ -193,9 +193,9 @@ class Asteroids():
         elif self.gameState == 'exploding':
             self.exploding()
         elif self.gameState == 'win':
-            self.displayWinScreen()
+            self.stage.displayWinScreen()
         else:
-            self.displayText()
+            self.stage.displayText()
 
         rockState = {}
         for index, rock in enumerate(self.rockList):
@@ -281,60 +281,6 @@ class Asteroids():
         elif self.level == 3:
             # Win after level 3
             self.gameState = 'win'
-
-    def displayWinScreen(self):
-        # Display victory
-        font = pygame.font.Font('../res/Hyperspace.otf', 50)
-        winText = font.render("You WIN!!!", True, (255, 255, 0))
-        winRect = winText.get_rect(center=(self.stage.width / 2, self.stage.height / 2))
-        self.stage.screen.fill((0, 0, 0))
-        self.stage.screen.blit(winText, winRect)
-        pygame.display.flip()
-        waiting = True
-        while waiting:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    waiting = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        waiting = False
-        pygame.quit()
-        sys.exit()
-
-    def displayText(self):
-        font1 = pygame.font.Font('../res/Hyperspace.otf', 50)
-        font2 = pygame.font.Font('../res/Hyperspace.otf', 20)
-        font3 = pygame.font.Font('../res/Hyperspace.otf', 30)
-
-        titleText = font1.render('Asteroids', True, (180, 180, 180))
-        titleTextRect = titleText.get_rect(centerx=self.stage.width/2)
-        titleTextRect.y = self.stage.height/2 - titleTextRect.height*2
-        self.stage.screen.blit(titleText, titleTextRect)
-
-        keysText = font2.render('(C) 1979 Atari INC.', True, (255, 255, 255))
-        keysTextRect = keysText.get_rect(centerx=self.stage.width/2)
-        keysTextRect.y = self.stage.height - keysTextRect.height - 20
-        self.stage.screen.blit(keysText, keysTextRect)
-
-        instructionText = font3.render('Press start to Play', True, (200, 200, 200))
-        instructionTextRect = instructionText.get_rect(centerx=self.stage.width/2)
-        instructionTextRect.y = self.stage.height/2 - instructionTextRect.height
-        self.stage.screen.blit(instructionText, instructionTextRect)
-
-    def displayScore(self):
-        font1 = pygame.font.Font('../res/Hyperspace.otf', 30)
-        scoreStr = str("%02d" % self.score)
-        scoreText = font1.render(scoreStr, True, (200, 200, 200))
-        scoreTextRect = scoreText.get_rect(centerx=100, centery=45)
-        self.stage.screen.blit(scoreText, scoreTextRect)
-
-    def displayPaused(self):
-        if self.paused:
-            font1 = pygame.font.Font('../res/Hyperspace.otf', 30)
-            pausedText = font1.render("Paused", True, (255, 255, 255))
-            textRect = pausedText.get_rect(centerx=self.stage.width/2, centery=self.stage.height/2)
-            self.stage.screen.blit(pausedText, textRect)
-            pygame.display.update()
 
     def input(self, events):
         self.frameAdvance = False
@@ -500,12 +446,7 @@ class Asteroids():
             debris = Debris(position, self.stage)
             self.stage.addSprite(debris)
 
-    def displayFps(self):
-        font2 = pygame.font.Font('../res/Hyperspace.otf', 15)
-        fpsStr = str(self.fps)+(' FPS')
-        scoreText = font2.render(fpsStr, True, (255, 255, 255))
-        scoreTextRect = scoreText.get_rect(centerx=(self.stage.width/2), centery=15)
-        self.stage.screen.blit(scoreText, scoreTextRect)
+
 
     def checkScore(self):
         if self.score > 0 and self.score > self.nextLife:
