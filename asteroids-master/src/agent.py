@@ -35,7 +35,7 @@ class Agent():
         alien_pos = state['alien']
         rocks = state['rocks']
 
-        hash_str = ""
+        state_hash_str = ""
 
 
         # Normalize ship heading
@@ -62,7 +62,7 @@ class Agent():
             if distance < 200 and direction_similarity > 0.9:
                 rock_danger = 1
                 break
-        hash_str += str(rock_danger)
+        state_hash_str += str(rock_danger)
         print("Rock danger ahead:", rock_danger)
 
 
@@ -81,7 +81,7 @@ class Agent():
             if direction_similarity > 0.7:
                 rock_in_view = 1
                 break
-        hash_str += str(rock_in_view)
+        state_hash_str += str(rock_in_view)
         print("Rock in cone:", rock_in_view)
 
 
@@ -97,13 +97,13 @@ class Agent():
             rock_prox = 1
         else:
             rock_prox = 0
-        hash_str += str(rock_prox)
+        state_hash_str += str(rock_prox)
         print("Rock proximity (0=farthest, 2=closest):", rock_prox)
 
 
         # Alien present
         alien_present = 1 if alien_pos else 0
-        hash_str += str(alien_present)
+        state_hash_str += str(alien_present)
         print("👾 Alien present:", alien_present)
 
 
@@ -118,7 +118,7 @@ class Agent():
             )
             if rel_pos_norm.dot(ship_heading_norm) > 0.7:
                 alien_in_view = 1
-        hash_str += str(alien_in_view)
+        state_hash_str += str(alien_in_view)
         print("Alien in view:", alien_in_view)
 
 
@@ -129,18 +129,18 @@ class Agent():
                                     (alien_pos.y - ship_pos.y) ** 2)
             if alien_distance < 200:
                 alien_prox = 1
-        hash_str += str(alien_prox)
+        state_hash_str += str(alien_prox)
         print("📏 Alien proximity:", alien_prox)
 
 
         # Bullet threat(future enhancement placeholder)
         bullet_threat = 0
-        hash_str += str(bullet_threat)
+        state_hash_str += str(bullet_threat)
         print("Bullet threat:", bullet_threat)
 
 
-        print("Hashed state:", hash_str)
-        return hash_str
+        print("Hashed state:", state_hash_str)
+        return state_hash_str
     
     def play(self):
             print("🚀 Initializing pygame...")
@@ -172,8 +172,8 @@ class Agent():
 
                 action = random.choice(actions)
                 obs, reward, done = self.game.step(action)
-                hash_str = self.hash()
-                print("🔑 State Hash:", hash_str)
+                state_hash = self.hash()
+                print("🔑 State Hash:", state_hash)
 
                 # Render the game state
                 print("🔄 Rendering frame...")
