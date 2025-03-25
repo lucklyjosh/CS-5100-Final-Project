@@ -3,6 +3,7 @@ import sys
 from soundManager import *
 from asteroids import *
 import random
+import numpy as np
 
 class Agent():
 
@@ -56,7 +57,8 @@ class Agent():
                 rel_pos.x / distance if distance != 0 else 0,
                 rel_pos.y / distance if distance != 0 else 0,
             )
-            direction_similarity = rel_pos_norm.x * ship_heading_norm.x + rel_pos_norm.y * ship_heading_norm.y
+            # direction_similarity = rel_pos_norm.x * ship_heading_norm.x + rel_pos_norm.y * ship_heading_norm.y
+            direction_similarity = np.dot([rel_pos_norm.x, rel_pos_norm.y], [ship_heading_norm.x, ship_heading_norm.y])
 
 
             if distance < 200 and direction_similarity > 0.9:
@@ -75,7 +77,8 @@ class Agent():
                 rel_pos.x / distance if distance != 0 else 0,
                 rel_pos.y / distance if distance != 0 else 0,
             )
-            direction_similarity = rel_pos_norm.x * ship_heading_norm.x + rel_pos_norm.y * ship_heading_norm.y
+            # direction_similarity = rel_pos_norm.x * ship_heading_norm.x + rel_pos_norm.y * ship_heading_norm.y
+            direction_similarity = np.dot([rel_pos_norm.x, rel_pos_norm.y], [ship_heading_norm.x, ship_heading_norm.y])
 
 
             if direction_similarity > 0.7:
