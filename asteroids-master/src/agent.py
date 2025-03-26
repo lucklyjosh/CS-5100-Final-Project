@@ -14,7 +14,7 @@ class Agent():
     # TODO: take in values and hash them into binary string, each slot representing situation of the state.
     # return binary string
 
-    def hash(self):
+    def hash(self, obs):
 
         '''
         - are we in the trajectory of a rock? (will it hit us if we don't move)
@@ -30,7 +30,7 @@ class Agent():
             - 1 = inside threshold
         '''
 
-        state = self.game.current_state
+        state = obs
         ship_pos = state['ship']['position']
         ship_heading = state['ship']['heading']
         alien_pos = state['alien']
@@ -175,7 +175,7 @@ class Agent():
 
                 action = random.choice(actions)
                 obs, reward, done = self.game.step(action)
-                state_hash = self.hash()
+                state_hash = self.hash(obs)
                 print("🔑 State Hash:", state_hash)
 
                 # Render the game state
