@@ -14,7 +14,7 @@ class Agent():
     # TODO: take in values and hash them into binary string, each slot representing situation of the state.
     # return binary string
 
-    def hash(self, obs):
+    def hash(self, obs, debug=False):
 
         '''
         - are we in the trajectory of a rock? (will it hit us if we don't move)
@@ -31,6 +31,8 @@ class Agent():
         '''
 
         state = obs
+        if debug:
+            print(obs)
         ship_pos = state['ship']['position']
         ship_heading = state['ship']['heading']
         alien_pos = state['alien']
@@ -65,7 +67,8 @@ class Agent():
                 rock_danger = 1
                 break
         state_hash_str += str(rock_danger)
-        print("Rock danger ahead:", rock_danger)
+        if debug:
+            print("Rock danger ahead:", rock_danger)
 
 
         # Rock is in the ship’s line of fire
@@ -85,7 +88,8 @@ class Agent():
                 rock_in_view = 1
                 break
         state_hash_str += str(rock_in_view)
-        print("Rock in cone:", rock_in_view)
+        if debug:
+            print("Rock in cone:", rock_in_view)
 
 
         #   Rock is in medium proximity
@@ -101,13 +105,15 @@ class Agent():
         else:
             rock_prox = 0
         state_hash_str += str(rock_prox)
-        print("Rock proximity (0=farthest, 2=closest):", rock_prox)
+        if debug:
+            print("Rock proximity (0=farthest, 2=closest):", rock_prox)
 
 
         # Alien present
         alien_present = 1 if alien_pos else 0
         state_hash_str += str(alien_present)
-        print("👾 Alien present:", alien_present)
+        if debug:
+            print("👾 Alien present:", alien_present)
 
 
         # Alien in view
@@ -122,7 +128,8 @@ class Agent():
             if rel_pos_norm.dot(ship_heading_norm) > 0.7:
                 alien_in_view = 1
         state_hash_str += str(alien_in_view)
-        print("Alien in view:", alien_in_view)
+        if debug:
+            print("Alien in view:", alien_in_view)
 
 
         # Alien proximity
@@ -133,94 +140,149 @@ class Agent():
             if alien_distance < 200:
                 alien_prox = 1
         state_hash_str += str(alien_prox)
-        print("📏 Alien proximity:", alien_prox)
+        if debug:
+            print("📏 Alien proximity:", alien_prox)
 
 
         # Bullet threat(future enhancement placeholder)
         bullet_threat = 0
         state_hash_str += str(bullet_threat)
-        print("Bullet threat:", bullet_threat)
+        if debug:
+            print("Bullet threat:", bullet_threat)
 
 
-        print("Hashed state:", state_hash_str)
+        if debug:
+            print("Hashed state:", state_hash_str)
         return state_hash_str
     
     def play(self):
+        print("🚀 Initializing pygame...")
+        pygame.init()
+
+        print("🔊 Initializing sound manager...")
+        initSoundManager()
+
+        print("🎮 Initializing game...")
+        self.game.initialiseGame()
+
+        actions = ['up', 'left', 'right', 'fire']
+        clock = pygame.time.Clock()
+
+        print("🖥️ Checking screen surface...")
+        if not self.game.stage.screen:
+            print("Screen surface is None!")
+        else:
+            print("Screen initialized:", self.game.stage.screen.get_size())
+            print("Display driver:", pygame.display.get_driver())
+
+        running = True
+        frame_count = 0
+        while running:
+            
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+
+            action = random.choice(actions)
+            obs, reward, done = self.game.step(action)
+            state_hash = self.hash(obs)
+            print("🔑 State Hash:", state_hash)
+
+            # Render the game state
+            print("🔄 Rendering frame...")
+            self.game.stage.screen.fill((10, 10, 10))
+            self.game.stage.moveSprites()
+            self.game.stage.drawSprites()
+            self.game.stage.displayScore(game.score)
+            pygame.display.flip()
+            print("✅ Frame rendered.")
+
+            print(f"Frame {frame_count}: {action}")
+            print("Ship:", obs['ship']['position'].x, obs['ship']['position'].y)
+            print("Rock:", obs['rocks'][0]['position'].x, obs['rocks'][0]['position'].y)
+            print("--------------")
+
+            frame_count += 1
+            clock.tick(60)
+
+            if done or frame_count > 3000:
+                running = False
+
+        pygame.quit()
+        print("🛑 Game session ended.")
+
+    def q_learning(self, num_episodes=10000, gamma=0.9, epsilon=1, decay_rate=0.999, history_range=100, GUI=False):
+        if GUI==True:
             print("🚀 Initializing pygame...")
             pygame.init()
 
             print("🔊 Initializing sound manager...")
             initSoundManager()
 
-            print("🎮 Initializing game...")
-            self.game.initialiseGame()
-
-            actions = ['up', 'left', 'right', 'fire']
             clock = pygame.time.Clock()
-
-            print("🖥️ Checking screen surface...")
-            if not self.game.stage.screen:
-                print("Screen surface is None!")
-            else:
-                print("Screen initialized:", self.game.stage.screen.get_size())
-                print("Display driver:", pygame.display.get_driver())
-
-            running = True
             frame_count = 0
-            while running:
-                
+            
+        Q_table = {}
+        update_table = {}
+
+        actions = ['up', 'left', 'right', 'fire']
+        num_actions = len(actions)
+        hist = []
+
+        for i in range(num_episodes):
+            obs, reward, done = self.game.initialiseGame()
+        
+            for j in range(history_range):
+                rand_action = random.choice(actions)
+                obs, reward, done = self.game.step(rand_action)
+                reward = random.randint(-100, 100)
+                hist.append([self.hash(obs), reward, actions.index(rand_action)])
+
+            while not done:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
-                        running = False
+                        done = True
 
-                action = random.choice(actions)
-                obs, reward, done = self.game.step(action)
-                state_hash = self.hash(obs)
-                print("🔑 State Hash:", state_hash)
+                snapshot = hist.pop(0)
+                hash = snapshot[0]
+                first_action_idx = snapshot[2]
+
+                if hash not in Q_table:
+                    Q_table[hash] = np.zeros(num_actions)
+                    update_table[hash] = np.zeros(num_actions)
+
+                eta = 1 / (1 + update_table[hash][first_action_idx])
+                subsequent_rewards = sum(map(lambda arr: arr[2], hist))
+                Q_table[hash][first_action_idx] = (1 - eta) * Q_table[hash][first_action_idx] + eta * subsequent_rewards
+
+                next_action = np.argmax(Q_table[hash])
+                obs, reward, done = self.game.step(actions[next_action])
+                reward = random.randint(-100, 100)
+                new_hash = self.hash(obs)
+                hist.append([new_hash, reward, next_action])
 
                 # Render the game state
-                print("🔄 Rendering frame...")
-                self.game.stage.screen.fill((10, 10, 10))
-                self.game.stage.moveSprites()
-                self.game.stage.drawSprites()
-                self.game.stage.displayScore(game.score)
-                pygame.display.flip()
-                print("✅ Frame rendered.")
+                if GUI==True:
+                    self.game.stage.screen.fill((10, 10, 10))
+                    self.game.stage.moveSprites()
+                    self.game.stage.drawSprites()
+                    self.game.stage.displayScore(game.score)
+                    pygame.display.flip()
 
-                print(f"Frame {frame_count}: {action}")
-                print("Ship:", obs['ship']['position'].x, obs['ship']['position'].y)
-                print("Rock:", obs['rocks'][0]['position'].x, obs['rocks'][0]['position'].y)
-                print("--------------")
+                    print(f"Frame {frame_count}: {next_action}")
+                    print("--------------")
 
-                frame_count += 1
-                clock.tick(60)
+                    frame_count += 1
+                    clock.tick(30)
 
-                if done or frame_count > 3000:
-                    running = False
+                    if frame_count > 300:
+                        done = True
 
-            pygame.quit()
-            print("🛑 Game session ended.")
-
-
-
-    def q_learning(self, num_episodes=10000, gamma=0.9, epsilon=1, decay_rate=0.999):
-        obs, reward, done = game.initialiseGame()
-        print(obs)
-
-        history = {}
-
-        # store history of 10 episodes. use last 9 episodes to calculate/update reward for first episode.
-        # for i in range(num_episodes):
-        #     if i < 9:
-        #         continue
-        #     else:
-        #         target_episode = history[0]
-
-    def obj_func():
-        print("hello world")
-
+        pygame.quit()
+        print("🛑 Game session ended.")
 
 if __name__ == "__main__":
     game = Asteroids()
     agent = Agent(game)
-    agent.play()
+    agent.q_learning(num_episodes = 1, GUI=True)
+    # agent.play()
