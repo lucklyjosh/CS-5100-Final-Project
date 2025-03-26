@@ -23,17 +23,18 @@ import pygame
 
 class Weapon(VectorSprite):
 
-    def __init__(self, position, heading, pointlist, stage, weapons):
+    def __init__(self, position, heading, pointlist, stage, weapons, currentWeapon):
         VectorSprite.__init__(self, position, heading, pointlist)
         self.bullets = []
         self.stage = stage
         self.weapons = ["Shooter", "Sword"]
+        self.currentWeapon = weapons[0]
 
     def fireBullet(self, heading, ttl, velocity):
         if (len(self.bullets) < self.maxBullets):
             position = Vector2d(self.position.x, self.position.y)
             newBullet = Bullet(position, heading, self,
-                               ttl, velocity, self.stage)
+                            ttl, velocity, self.stage)
             self.bullets.append(newBullet)
             self.stage.addSprite(newBullet)
             return True
@@ -48,16 +49,19 @@ class Weapon(VectorSprite):
         return collisionDetected
 
     def displaySword(self, ship):
-        sword = Sword(position, ship, heading, ttl, stage)
-         
+        newSword = Sword(position, ship, heading, ttl, velocity, stage)
+        self.stage.addSprite(newSword)
+    
+    def swing(self, heading, ttl, velocity):
+        self.position = Vector2d(self.position.x, self.position.y)
 
     def swordCollision(self, target):
-         collisionDetected = False
-         sword = Sword(position, ship, heading, ttl, stage)
-         if sword.ttl > 0 and target.collidesWith(sword):
-               colisionDetected = True
-               sword.ttl = 0
-         return collisionDetected 
+        collisionDetected = False
+        sword = Sword(self, self.position, self.ship, self.heading, self.ttl, self.stage)
+        if sword.ttl > 0 and target.collidesWith(sword):
+            collisionDetected = True
+            sword.ttl = 0
+        return collisionDetected 
 
 # Bullet class
 
@@ -77,13 +81,17 @@ class Bullet(Point):
 
 class Sword(Point):
     
-    def __init__(self, position, ship, heading, ttl, stage):
+    def __init__(self, position, ship, heading, ttl, velocity, stage):
+        Point.__init__(self, position, heading, stage)
+        self.position = position
         self.ship = ship
         self.ttl = ttl
+        self.velocity = velocity
 
     def move(self):
         Point.move(self)
 
-    def swing():
+    
+
         
         

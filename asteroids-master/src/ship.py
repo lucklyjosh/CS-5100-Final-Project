@@ -21,9 +21,10 @@ from util.vectorsprites import *
 from shooter import *
 from math import *
 from soundManager import *
+from weapons import *
 
 
-class Ship(Shooter):
+class Ship(Weapon):
 
     # Class attributes
     acceleration = 0.2
@@ -33,6 +34,10 @@ class Ship(Shooter):
     bulletVelocity = 13.0
     maxBullets = 4
     bulletTtl = 35
+    weapons = ["Shooter", "Sword"]
+    currentWeapon = weapons[0]
+    swordVelocity = 13.0
+    swordTtl = 20
 
     def __init__(self, stage):
 
@@ -141,9 +146,16 @@ class Ship(Shooter):
             vx = self.bulletVelocity * math.sin(radians(self.angle)) * -1
             vy = self.bulletVelocity * math.cos(radians(self.angle)) * -1
             heading = Vector2d(vx, vy)
-            Shooter.fireBullet(self, heading, self.bulletTtl,
+            Weapon.fireBullet(self, heading, self.bulletTtl,
                                self.bulletVelocity)
             playSound("fire")
+    
+    def swingSword(self):
+        if self.inHyperSpace == false:
+            vx = self.swordVelocity * math.sin(radians(self.angle)) * -1
+            vy = self.swordVelocity * math.cos(radians(self.angle)) * -1
+            heading = Vector2d(vx, vy)
+            Weapon.swingSword(self, heading, self.swordTtl, self.swordVelocity)
 
     #
     def enterHyperSpace(self):

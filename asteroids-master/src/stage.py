@@ -59,7 +59,7 @@ class Stage:
                 self.screen, sprite.color, True, sprite.draw())
             if self.showBoundingBoxes == True:
                 pygame.draw.rect(self.screen, (255, 255, 255),
-                                 sprite.boundingRect, 1)
+                                sprite.boundingRect, 1)
 
     def moveSprites(self):
         for sprite in self.spriteList:

@@ -58,6 +58,8 @@ class Asteroids():
         self.secondsCount = 1
         self.score = 0
         self.ship = None
+        self.weapons = ["Shooter", "Sword"]
+        self.currentWeapon = self.weapons[0]
         self.lives = 0
         self.leaderboard = []
 
@@ -259,6 +261,11 @@ class Asteroids():
                         self.ship.fireBullet()
                     elif event.key == K_h:
                         self.ship.enterHyperSpace()
+                    elif event.key == K_w:
+                        if self.currentWeapon == self.weapons[0]:
+                            self.currentWeapon = self.weapons[1]
+                        else:
+                            self.currentWeapon = self.weapons[0]        
                 elif self.gameState == 'attract_mode':
                     # Start a new game
                     if event.key == K_RETURN:
