@@ -250,6 +250,7 @@ class Agent():
                 eta = 1 / (1 + update_table[hash][first_action_idx])
                 subsequent_rewards = sum(map(lambda arr: arr[2], hist))
                 Q_table[hash][first_action_idx] = (1 - eta) * Q_table[hash][first_action_idx] + eta * subsequent_rewards
+                update_table[hash][first_action_idx] += 1
 
                 next_action = np.argmax(Q_table[hash])
                 obs, reward, done = self.game.step(actions[next_action])
@@ -265,14 +266,16 @@ class Agent():
                     self.game.stage.displayScore(game.score)
                     pygame.display.flip()
 
-                    print(f"Frame {frame_count}: {next_action}")
-                    print("--------------")
+                    # print(f"Frame {frame_count}: {next_action}")
+                    # print("--------------")
 
                     frame_count += 1
                     clock.tick(30)
 
                     if frame_count > 300:
                         done = True
+                        print(Q_table)
+                        print(update_table)
 
         pygame.quit()
         print("🛑 Game session ended.")
