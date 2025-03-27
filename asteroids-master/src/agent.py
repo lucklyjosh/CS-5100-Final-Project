@@ -11,9 +11,7 @@ class Agent():
         self.game = game
         print("initializing agent")
 
-    # TODO: take in values and hash them into binary string, each slot representing situation of the state.
-    # return binary string
-
+    # hash observation into a string
     def hash(self, obs, debug=False):
 
         '''
@@ -59,7 +57,6 @@ class Agent():
                 rel_pos.x / distance if distance != 0 else 0,
                 rel_pos.y / distance if distance != 0 else 0,
             )
-            # direction_similarity = rel_pos_norm.x * ship_heading_norm.x + rel_pos_norm.y * ship_heading_norm.y
             direction_similarity = np.dot([rel_pos_norm.x, rel_pos_norm.y], [ship_heading_norm.x, ship_heading_norm.y])
 
 
@@ -80,7 +77,6 @@ class Agent():
                 rel_pos.x / distance if distance != 0 else 0,
                 rel_pos.y / distance if distance != 0 else 0,
             )
-            # direction_similarity = rel_pos_norm.x * ship_heading_norm.x + rel_pos_norm.y * ship_heading_norm.y
             direction_similarity = np.dot([rel_pos_norm.x, rel_pos_norm.y], [ship_heading_norm.x, ship_heading_norm.y])
 
 
