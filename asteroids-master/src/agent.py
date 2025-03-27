@@ -9,6 +9,8 @@ class Agent():
 
     def __init__(self, game):
         self.game = game
+        self.Q_table = {}
+        self.update_table = {}
         print("initializing agent")
 
     # hash observation into a string
@@ -217,9 +219,6 @@ class Agent():
 
             clock = pygame.time.Clock()
             frame_count = 0
-            
-        Q_table = {}
-        update_table = {}
 
         actions = ['up', 'left', 'right', 'fire']
         num_actions = len(actions)
@@ -246,18 +245,18 @@ class Agent():
                 hash = snapshot[0]
                 first_action_idx = snapshot[2]
 
-                if hash not in Q_table:
-                    Q_table[hash] = np.zeros(num_actions)
-                    update_table[hash] = np.zeros(num_actions)
+                if hash not in self.Q_table:
+                    self.Q_table[hash] = np.zeros(num_actions)
+                    self.update_table[hash] = np.zeros(num_actions)
 
-                eta = 1 / (1 + update_table[hash][first_action_idx])
+                eta = 1 / (1 + self.update_table[hash][first_action_idx])
                 # update subsequent_rewards
                 subsequent_rewards -= snapshot[1]
                 subsequent_rewards += hist[-1][1]
-                Q_table[hash][first_action_idx] = (1 - eta) * Q_table[hash][first_action_idx] + eta * subsequent_rewards
-                update_table[hash][first_action_idx] += 1
+                self.Q_table[hash][first_action_idx] = (1 - eta) * self.Q_table[hash][first_action_idx] + eta * subsequent_rewards
+                self.update_table[hash][first_action_idx] += 1
 
-                next_action = np.argmax(Q_table[hash])
+                next_action = np.argmax(self.Q_table[hash])
                 obs, reward, done = self.game.step(actions[next_action])
                 reward = random.randint(-100, 100)
                 new_hash = self.hash(obs)
@@ -279,8 +278,8 @@ class Agent():
 
                     if frame_count > 300:
                         done = True
-                        print(Q_table)
-                        print(update_table)
+                        print(self.Q_table)
+                        print(self.update_table)
 
         pygame.quit()
         print("🛑 Game session ended.")
