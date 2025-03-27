@@ -151,7 +151,7 @@ class Ship(Weapon):
             playSound("fire")
     
     def swingSword(self):
-        if self.inHyperSpace == false:
+        if self.inHyperSpace == False:
             vx = self.swordVelocity * math.sin(radians(self.angle)) * -1
             vy = self.swordVelocity * math.cos(radians(self.angle)) * -1
             heading = Vector2d(vx, vy)

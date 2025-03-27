@@ -52,7 +52,7 @@ class Weapon(VectorSprite):
         newSword = Sword(position, ship, heading, ttl, velocity, stage)
         self.stage.addSprite(newSword)
     
-    def swing(self, heading, ttl, velocity):
+    def swingSword(self, heading, ttl, velocity):
         self.position = Vector2d(self.position.x, self.position.y)
 
     def swordCollision(self, target):

@@ -256,9 +256,15 @@ class Asteroids():
                     sys.exit(0)
                 if self.gameState == 'playing':
                     if event.key == K_SPACE:
-                        self.ship.fireBullet()
+                        if self.currentWeapon == "Shooter":
+                            self.ship.fireBullet()
+                        else:
+                            self.ship.swingSword()    
                     elif event.key == K_b:
-                        self.ship.fireBullet()
+                        if self.currentWeapon == "Shooter":
+                            self.ship.fireBullet()
+                        else:
+                            self.ship.swingSword()    
                     elif event.key == K_h:
                         self.ship.enterHyperSpace()
                     elif event.key == K_w:
