@@ -27,6 +27,7 @@ class Stage:
     # Set up the PyGame surface
     def __init__(self, caption, dimensions=None):
         pygame.init()
+        self.font = pygame.font.Font(None, 36)
 
         # If no screen size is provided pick the first available mode
         if dimensions == None:
@@ -76,3 +77,16 @@ class Stage:
 
             if sprite.position.y > self.height:
                 sprite.position.y = 0
+
+    def displayScore(self, score):##for rewards
+            if not hasattr(self, 'font'):
+                self.font = pygame.font.Font(None, 36)
+            score_surface = self.font.render(f'Score: {score}', True, (255, 255, 255))
+            self.screen.blit(score_surface, (10, 10))
+
+    def displayText(self):
+        if not hasattr(self, 'font'):
+            self.font = pygame.font.Font(None, 48)
+        text_surface = self.font.render('Press ENTER to Start', True, (255, 255, 255))
+        rect = text_surface.get_rect(center=(self.width // 2, self.height // 2))
+        self.screen.blit(text_surface, rect)

@@ -51,7 +51,7 @@ class Asteroids():
         self.frameAdvance = False
         self.gameState = "attract_mode"
         self.rockList = []
-        # 
+        #
         self.createRocks(1)
         self.saucer = None
         self.secondsCount = 1
@@ -59,6 +59,21 @@ class Asteroids():
         self.ship = None
         self.lives = 0
         self.level = 1
+        self.rewards_config = {
+            'hit_large_rock': 50,
+            'hit_medium_rock': 100,
+            'hit_small_rock': 200,
+            'hit_alien_slow': 500,
+            'hit_alien_fast': 1000,
+            'life_lost': -1000,
+            'hyperspace_safe': 50,
+            'hyperspace_crash': -200,
+            'level_cleared': 500,
+            'survive_frame': 1,
+            'bullet_missed': -5,
+            'rotate_near_rock': 10,
+            'rotate_no_threat': 5,
+        }
 
     def initialiseGame(self):
         self.gameState = 'playing'
@@ -66,11 +81,12 @@ class Asteroids():
         if self.saucer is not None:
             self.killSaucer()
         self.startLives = 5
+        self.lives = self.startLives
         self.createNewShip()
         self.createLivesList()
         self.score = 0
         self.rockList = []
-        # Set level 1 
+        # Set level 1
         self.level = 1
         self.numRocks = 1
         self.nextLife = 10000
@@ -86,13 +102,13 @@ class Asteroids():
         self.stage.addSprite(self.ship)
 
     def createLivesList(self):
-        self.lives += 1
+        #self.lives += 1
         self.livesList = []
         for i in range(1, self.startLives):
             self.addLife(i)
 
     def addLife(self, lifeNumber):
-        self.lives += 1
+        #self.lives += 1
         ship = Ship(self.stage)
         self.stage.addSprite(ship)
         ship.position.x = self.stage.width - (lifeNumber * ship.boundingRect.width) - 10
@@ -185,7 +201,6 @@ class Asteroids():
             self.gameState = 'playing'
             [self.stage.spriteList.remove(debris) for debris in self.ship.shipDebrisList]
             self.ship.shipDebrisList = []
-
             if self.lives == 0:
                 self.ship.visible = False
             else:
@@ -308,6 +323,12 @@ class Asteroids():
         # Ship bullet hit rock?
         newRocks = []
         shipHit, saucerHit = False, False
+        reward_context = {
+            "ship_hit": False,
+            "rocks_destroyed": [],
+            "alien_hit": None,
+            "hyperspace": None,
+        }
 
         # Rocks
         for rock in self.rockList:
@@ -318,7 +339,7 @@ class Asteroids():
                 if p is not None:
                     shipHit = True
                     rockHit = True
-
+                reward_context["ship_hit"] = True
             if self.saucer is not None:
                 if rock.collidesWith(self.saucer):
                     saucerHit = True
@@ -356,6 +377,7 @@ class Asteroids():
                         newRock = Rock(self.stage, position, newRockType)
                         self.stage.addSprite(newRock)
                         self.rockList.append(newRock)
+                reward_context["rocks_destroyed"].append(rock.rockType) ## for rewards
 
                 self.createDebris(rock)
 
@@ -381,9 +403,9 @@ class Asteroids():
         playSound("explode2")
         self.explodingCount = 0
         self.lives -= 1
-        if self.livesList:
-            ship = self.livesList.pop()
-            self.stage.removeSprite(ship)
+        #if self.livesList:
+        #    ship = self.livesList.pop()
+        #    self.stage.removeSprite(ship)
 
         self.stage.removeSprite(self.ship)
         self.stage.removeSprite(self.ship.thrustJet)
@@ -414,7 +436,67 @@ class Asteroids():
         if self.score > 0 and self.score > self.nextLife:
             playSound("extralife")
             self.nextLife += 10000
-            self.addLife(self.lives)
+            self.lives += 1  # First, update lives count
+            self.addLife(self.lives - 1)
+            #self.addLife(self.lives)
+
+    def calculate_rewards(self, context: dict = None):
+
+        if context is None:
+            context = {}
+
+        reward = 0
+        notes = []
+
+        if context.get("ship_hit"):
+            reward += self.rewards_config['life_lost']
+            notes.append("Ship hit: -1000")
+
+        if context.get("hyperspace") == "safe":
+            reward += self.rewards_config['hyperspace_safe']
+            notes.append("Hyperspace safe: +50")
+        elif context.get("hyperspace") == "crash":
+            reward += self.rewards_config['hyperspace_crash']
+            notes.append("Hyperspace crash: -200")
+
+        for rock_type in context.get("rocks_destroyed", []):
+            if rock_type == Rock.largeRockType:
+                reward += self.rewards_config['hit_large_rock']
+                notes.append("Large rock destroyed: +50")
+            elif rock_type == Rock.mediumRockType:
+                reward += self.rewards_config['hit_medium_rock']
+                notes.append("Medium rock destroyed: +100")
+            elif rock_type == Rock.smallRockType:
+                reward += self.rewards_config['hit_small_rock']
+                notes.append("Small rock destroyed: +200")
+
+        if context.get("alien_hit") == "large":
+            reward += self.rewards_config['hit_alien_slow']
+            notes.append("Large saucer hit: +500")
+        elif context.get("alien_hit") == "small":
+            reward += self.rewards_config['hit_alien_fast']
+            notes.append("Small saucer hit: +1000")
+
+        if context.get("level_cleared"):
+            reward += self.rewards_config['level_cleared']
+            notes.append("Level cleared: +500")
+
+        if context.get("bullet_missed"):
+            reward += self.rewards_config['bullet_missed']
+            notes.append("Bullet missed: -5")
+
+        if context.get("rotated") == "near_threat":
+            reward += self.rewards_config['rotate_near_rock']
+            notes.append("Rotated near rock: +10")
+        elif context.get("rotated") == "no_threat":
+            reward += self.rewards_config['rotate_no_threat']
+            notes.append("Rotated with no threat: +5")
+
+        if reward == 0:
+            reward += self.rewards_config['survive_frame']
+            notes.append("Survived frame: +1")
+
+        return reward, notes
 
 
 # Script to run the game
