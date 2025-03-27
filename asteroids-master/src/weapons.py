@@ -49,15 +49,18 @@ class Weapon(VectorSprite):
         return collisionDetected
 
     def displaySword(self, ship):
-        newSword = Sword(position, ship, heading, ttl, velocity, stage)
+        position = Vector2d(self.position.x, self.position.y)
+        newSword = Sword(position, ship, heading, ttl, velocity, self.stage)
         self.stage.addSprite(newSword)
     
     def swingSword(self, heading, ttl, velocity):
-        self.position = Vector2d(self.position.x, self.position.y)
+        position = Vector2d(self.position.x, self.position.y)
+        newSword = Sword(position, heading, ttl, velocity, self.stage)
+        self.stage.addSprite(newSword)
 
     def swordCollision(self, target):
         collisionDetected = False
-        sword = Sword(self, self.position, self.ship, self.heading, self.ttl, self.stage)
+        sword = Sword(self.position, self.heading, self.ttl, self.velocity, self.stage)
         if sword.ttl > 0 and target.collidesWith(sword):
             collisionDetected = True
             sword.ttl = 0
@@ -81,12 +84,13 @@ class Bullet(Point):
 
 class Sword(Point):
     
-    def __init__(self, position, ship, heading, ttl, velocity, stage):
+    def __init__(self, position, heading, ttl, velocity, stage):
         Point.__init__(self, position, heading, stage)
         self.position = position
-        self.ship = ship
+        self.heading = heading
         self.ttl = ttl
         self.velocity = velocity
+        self.stage = stage
 
     def move(self):
         Point.move(self)
