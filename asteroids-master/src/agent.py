@@ -234,6 +234,9 @@ class Agent():
                 reward = random.randint(-100, 100)
                 hist.append([self.hash(obs), reward, actions.index(rand_action)])
 
+            # init subsequent rewards into the first loop
+            subsequent_rewards = sum(map(lambda arr: arr[1], hist[:-1]))
+
             while not done:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
@@ -248,7 +251,9 @@ class Agent():
                     update_table[hash] = np.zeros(num_actions)
 
                 eta = 1 / (1 + update_table[hash][first_action_idx])
-                subsequent_rewards = sum(map(lambda arr: arr[2], hist))
+                # update subsequent_rewards
+                subsequent_rewards -= snapshot[1]
+                subsequent_rewards += hist[-1][1]
                 Q_table[hash][first_action_idx] = (1 - eta) * Q_table[hash][first_action_idx] + eta * subsequent_rewards
                 update_table[hash][first_action_idx] += 1
 
