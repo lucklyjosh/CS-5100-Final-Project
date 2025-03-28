@@ -68,11 +68,6 @@ class Asteroids():
             'reward_survive_frame': 1,
             'reward_do_nothing': 0,
             'reward_life_lost': -1000,
-            'reward_hyperspace_safe': 50,
-            'reward_hyperspace_crash': -200,
-            'reward_rotate_near_rock': 10,
-            'reward_rotate_no_threat': 5,
-            'reward_bullet_missed': -5,
             'reward_level_cleared': 500
         }
 
