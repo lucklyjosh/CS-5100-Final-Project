@@ -153,6 +153,14 @@ class Ship(Shooter):
             self.color = (0, 0, 0)
             self.thrustJet.color = (0, 0, 0)
 
+    # return copy of position
+    def getPos(self):
+        return self.position
+    
+    # return copy of heading
+    def getHeading(self):
+        return self.heading
+
 
 # Exhaust jet when ship is accelerating
 class ThrustJet(VectorSprite):

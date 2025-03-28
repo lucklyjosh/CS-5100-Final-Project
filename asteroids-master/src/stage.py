@@ -33,13 +33,10 @@ class Stage:
         if dimensions == None:
             dimensions = pygame.display.list_modes()[0]
 
-        pygame.display.set_mode(dimensions, FULLSCREEN)
+        self.screen = pygame.display.set_mode(dimensions)
+        pygame.display.set_caption(caption)
         pygame.mouse.set_visible(False)
 
-        # pygame.display.set_mode(dimensions)
-
-        pygame.display.set_caption(caption)
-        self.screen = pygame.display.get_surface()
         self.spriteList = []
         self.width = dimensions[0]
         self.height = dimensions[1]
@@ -69,7 +66,7 @@ class Stage:
             if sprite.position.x < 0:
                 sprite.position.x = self.width
 
-            if sprite.position.x > self.width:
+            if sprite.position.x >  self.width:
                 sprite.position.x = 0
 
             if sprite.position.y < 0:
@@ -77,16 +74,64 @@ class Stage:
 
             if sprite.position.y > self.height:
                 sprite.position.y = 0
-
-    def displayScore(self, score):##for rewards
-            if not hasattr(self, 'font'):
-                self.font = pygame.font.Font(None, 36)
-            score_surface = self.font.render(f'Score: {score}', True, (255, 255, 255))
-            self.screen.blit(score_surface, (10, 10))
-
+    
     def displayText(self):
-        if not hasattr(self, 'font'):
-            self.font = pygame.font.Font(None, 48)
-        text_surface = self.font.render('Press ENTER to Start', True, (255, 255, 255))
-        rect = text_surface.get_rect(center=(self.width // 2, self.height // 2))
-        self.screen.blit(text_surface, rect)
+        font1 = pygame.font.Font('../res/Hyperspace.otf', 50)
+        font2 = pygame.font.Font('../res/Hyperspace.otf', 20)
+        font3 = pygame.font.Font('../res/Hyperspace.otf', 30)
+
+        titleText = font1.render('Asteroids', True, (180, 180, 180))
+        titleTextRect = titleText.get_rect(centerx=self.width/2)
+        titleTextRect.y = self.height/2 - titleTextRect.height*2
+        self.screen.blit(titleText, titleTextRect)
+
+        keysText = font2.render('(C) 1979 Atari INC.', True, (255, 255, 255))
+        keysTextRect = keysText.get_rect(centerx=self.width/2)
+        keysTextRect.y = self.height - keysTextRect.height - 20
+        self.screen.blit(keysText, keysTextRect)
+
+        instructionText = font3.render('Press start to Play', True, (200, 200, 200))
+        instructionTextRect = instructionText.get_rect(centerx=self.width/2)
+        instructionTextRect.y = self.height/2 - instructionTextRect.height
+        self.screen.blit(instructionText, instructionTextRect)
+
+    def displayWinScreen(self):
+        # Display victory
+        font = pygame.font.Font('../res/Hyperspace.otf', 50)
+        winText = font.render("You WIN!!!", True, (255, 255, 0))
+        winRect = winText.get_rect(center=(self.width / 2, self.height / 2))
+        self.screen.fill((0, 0, 0))
+        self.screen.blit(winText, winRect)
+        pygame.display.flip()
+        waiting = True
+        while waiting:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    waiting = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        waiting = False
+        pygame.quit()
+        sys.exit()
+
+    def displayPaused(self):
+        if self.paused:
+            font1 = pygame.font.Font('../res/Hyperspace.otf', 30)
+            pausedText = font1.render("Paused", True, (255, 255, 255))
+            textRect = pausedText.get_rect(centerx=self.width/2, centery=self.height/2)
+            self.screen.blit(pausedText, textRect)
+            pygame.display.update()
+
+    def displayScore(self, score):
+        font1 = pygame.font.Font('../res/Hyperspace.otf', 30)
+        scoreStr = str("%02d" % score)
+        scoreText = font1.render(scoreStr, True, (200, 200, 200))
+        scoreTextRect = scoreText.get_rect(centerx=100, centery=45)
+        self.screen.blit(scoreText, scoreTextRect)
+
+    def displayFps(self):
+        font2 = pygame.font.Font('../res/Hyperspace.otf', 15)
+        fpsStr = str(self.fps)+(' FPS')
+        scoreText = font2.render(fpsStr, True, (255, 255, 255))
+        scoreTextRect = scoreText.get_rect(centerx=(self.width/2), centery=15)
+        self.screen.blit(scoreText, scoreTextRect)
