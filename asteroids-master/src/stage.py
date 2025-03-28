@@ -27,6 +27,7 @@ class Stage:
     # Set up the PyGame surface
     def __init__(self, caption, dimensions=None):
         pygame.init()
+        self.font = pygame.font.Font(None, 36)
 
         # If no screen size is provided pick the first available mode
         if dimensions == None:
