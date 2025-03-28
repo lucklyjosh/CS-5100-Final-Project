@@ -13,3 +13,7 @@ To play normally with the keyboard:
 
 To have the agent play:  
 `python3 agent.py` 
+
+
+### Credits:
+Asteroids pygame environment borrowed and adjusted from: https://github.com/TheBeachLab/asteroids
