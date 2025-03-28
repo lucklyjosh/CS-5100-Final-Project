@@ -29,17 +29,14 @@ class Agent():
             - 0 = outside threshold
             - 1 = inside threshold
         '''
-
+                
         state = obs
-        if debug:
-            print(obs)
         ship_pos = state['ship']['position']
         ship_heading = state['ship']['heading']
         alien_pos = state['alien']
         rocks = state['rocks']
 
         state_hash_str = ""
-
 
         # Normalize ship heading
         ship_heading_mag = math.sqrt(ship_heading.x ** 2 + ship_heading.y ** 2)
@@ -48,71 +45,85 @@ class Agent():
             ship_heading.y / ship_heading_mag if ship_heading_mag != 0 else 0,
         )
 
-
         # Rock danger ahead
         rock_danger = 0
-        for rock in rocks.values():
-            
-            rel_pos = Vector2d(rock['position'].x - ship_pos.x, rock['position'].y - ship_pos.y)
-            distance = math.sqrt(rel_pos.x**2 + rel_pos.y**2)
-            rel_pos_norm = Vector2d(
-                rel_pos.x / distance if distance != 0 else 0,
-                rel_pos.y / distance if distance != 0 else 0,
-            )
-            direction_similarity = np.dot([rel_pos_norm.x, rel_pos_norm.y], [ship_heading_norm.x, ship_heading_norm.y])
+        rock_in_view = 0
 
+        if rocks:
+            for rock in rocks.values():
+                rel_pos = Vector2d(rock['position'].x - ship_pos.x, rock['position'].y - ship_pos.y)
+                distance = math.sqrt(rel_pos.x**2 + rel_pos.y**2)
+                rel_pos_norm = Vector2d(
+                    rel_pos.x / distance if distance != 0 else 0,
+                    rel_pos.y / distance if distance != 0 else 0,
+                )
+                direction_similarity = np.dot([rel_pos_norm.x, rel_pos_norm.y], [ship_heading_norm.x, ship_heading_norm.y])
 
-            if distance < 200 and direction_similarity > 0.9:
-                rock_danger = 1
-                break
+                if distance < 30 and direction_similarity > 0.9:
+                    rock_danger = 1
+                    
+
+                if rock_danger == 0 and direction_similarity > 0.7 and distance < 150:
+                    rock_in_view = 1
+
         state_hash_str += str(rock_danger)
+        state_hash_str += str(rock_in_view)
+
         if debug:
             print("Rock danger ahead:", rock_danger)
+            print("Rock in view:", rock_in_view)
 
 
-        # Rock is in the ship’s line of fire
-        rock_in_view = 0
-        for rock in rocks.values():
-            rel_pos = Vector2d(rock['position'].x - ship_pos.x, rock['position'].y - ship_pos.y)
-            distance = math.sqrt(rel_pos.x**2 + rel_pos.y**2)
-            rel_pos_norm = Vector2d(
-                rel_pos.x / distance if distance != 0 else 0,
-                rel_pos.y / distance if distance != 0 else 0,
-            )
-            direction_similarity = np.dot([rel_pos_norm.x, rel_pos_norm.y], [ship_heading_norm.x, ship_heading_norm.y])
+        # Rock in the ship’s line of fire
+        # rock_in_view = 0
+        # if not rock_danger and rocks:
+        #     for rock in rocks.values():
+        #         rel_pos = Vector2d(rock['position'].x - ship_pos.x, rock['position'].y - ship_pos.y)
+        #         distance = math.sqrt(rel_pos.x**2 + rel_pos.y**2)
+        #         rel_pos_norm = Vector2d(
+        #             rel_pos.x / max(distance, 1e-6),
+        #             rel_pos.y / max(distance, 1e-6),
+        #         )
 
+        #         direction_similarity = np.dot([rel_pos_norm.x, rel_pos_norm.y], [ship_heading_norm.x, ship_heading_norm.y])
+        #         print(f"[Rock View Check] Distance: {distance:.2f}, Similarity: {direction_similarity:.2f}")
 
-            if direction_similarity > 0.7:
-                rock_in_view = 1
-                break
-        state_hash_str += str(rock_in_view)
-        if debug:
-            print("Rock in cone:", rock_in_view)
+        #         if direction_similarity > 0.7:
+        #             print("[Rock View Check] ✅ Rock detected in view!")
+        #             rock_in_view = 1
+        #             break
+        # state_hash_str += str(rock_in_view)
+        # if debug:
+        #     print("Rock in cone:", rock_in_view)
 
-
-        #   Rock is in medium proximity
-        min_dist = min([
-            math.sqrt((rock['position'].x - ship_pos.x) ** 2 +
-                    (rock['position'].y - ship_pos.y) ** 2)
-            for rock in rocks.values()
-        ])
-        if min_dist < 75:
+        # Rock proximity
+        rock_prox = 0
+        min_dist = float('inf')
+        if rock_danger == 1:
             rock_prox = 2
-        elif min_dist < 150:
-            rock_prox = 1
         else:
-            rock_prox = 0
+            if rocks:
+                min_dist = min([
+                    math.sqrt((rock['position'].x - ship_pos.x) ** 2 + (rock['position'].y - ship_pos.y) ** 2)
+                    for rock in rocks.values()
+                ])
+                if min_dist <= 75:
+                    rock_prox = 2   
+                elif min_dist <= 150:
+                    rock_prox = 1
+                else:
+                    rock_prox = 0
+        # print(f"[Rock Proximity Check] Min Distance: {min_dist:.2f}, Proximity Level: {rock_prox}")
+
         state_hash_str += str(rock_prox)
         if debug:
             print("Rock proximity (0=farthest, 2=closest):", rock_prox)
-
 
         # Alien present
         alien_present = 1 if alien_pos else 0
         state_hash_str += str(alien_present)
         if debug:
-            print("👾 Alien present:", alien_present)
-
+            print("Alien present:", alien_present)
 
         # Alien in view
         alien_in_view = 0
@@ -123,35 +134,33 @@ class Agent():
                 rel_pos.x / alien_dist if alien_dist != 0 else 0,
                 rel_pos.y / alien_dist if alien_dist != 0 else 0,
             )
-            if rel_pos_norm.dot(ship_heading_norm) > 0.7:
+            direction_similarity = np.dot([rel_pos_norm.x, rel_pos_norm.y], [ship_heading_norm.x, ship_heading_norm.y])
+            if direction_similarity > 0.7:  
                 alien_in_view = 1
         state_hash_str += str(alien_in_view)
         if debug:
             print("Alien in view:", alien_in_view)
 
-
         # Alien proximity
         alien_prox = 0
         if alien_pos:
-            alien_distance = math.sqrt((alien_pos.x - ship_pos.x) ** 2 +
-                                    (alien_pos.y - ship_pos.y) ** 2)
+            alien_distance = math.sqrt((alien_pos.x - ship_pos.x) ** 2 + (alien_pos.y - ship_pos.y) ** 2)
             if alien_distance < 200:
                 alien_prox = 1
         state_hash_str += str(alien_prox)
         if debug:
-            print("📏 Alien proximity:", alien_prox)
+            print("Alien proximity:", alien_prox)
 
-
-        # Bullet threat(future enhancement placeholder)
+        # Bullet threat (placeholder)
         bullet_threat = 0
         state_hash_str += str(bullet_threat)
         if debug:
             print("Bullet threat:", bullet_threat)
 
-
         if debug:
             print("Hashed state:", state_hash_str)
         return state_hash_str
+
     
     def play(self):
         print("🚀 Initializing pygame...")
