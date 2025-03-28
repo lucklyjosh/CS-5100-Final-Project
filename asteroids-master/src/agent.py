@@ -285,7 +285,7 @@ class Agent():
                     frame_count += 1
                     clock.tick(30)
 
-                    if frame_count > 300:
+                    if frame_count > 3000:
                         done = True
                         print(self.Q_table)
                         print(self.update_table)
