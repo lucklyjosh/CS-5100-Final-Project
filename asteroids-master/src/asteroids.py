@@ -39,7 +39,8 @@ from stage import *
 from badies import *
 from shooter import *
 from soundManager import *
-### test
+
+
 class Asteroids():
 
     explodingTtl = 180
@@ -51,44 +52,45 @@ class Asteroids():
         self.frameAdvance = False
         self.gameState = "attract_mode"
         self.rockList = []
-        #
-        self.createRocks(1)
+        self.createRocks(3)
         self.saucer = None
         self.secondsCount = 1
         self.score = 0
         self.ship = None
         self.lives = 0
-        self.level = 1
-        self.rewards_config = {
-            'hit_large_rock': 50,
-            'hit_medium_rock': 100,
-            'hit_small_rock': 200,
-            'hit_alien_slow': 500,
-            'hit_alien_fast': 1000,
-            'life_lost': -1000,
-            'hyperspace_safe': 50,
-            'hyperspace_crash': -200,
-            'level_cleared': 500,
-            'survive_frame': 1,
-            'bullet_missed': -5,
-            'rotate_near_rock': 10,
-            'rotate_no_threat': 5,
+        self.current_state = {'reward': -1000}
+        self.reward_context = {
+            'reward_hit_alien_slow': 500,
+            'reward_hit_alien_fast': 1000,
+            'reward_hit_large_rock': 50,
+            'reward_hit_medium_rock': 100,
+            'reward_hit_small_rock': 200,
+            'reward_survive_frame': 1,
+            'reward_do_nothing': 0,
+            'reward_life_lost': -1000,
+            'reward_hyperspace_safe': 50,
+            'reward_hyperspace_crash': -200,
+            'reward_rotate_near_rock': 10,
+            'reward_rotate_no_threat': 5,
+            'reward_bullet_missed': -5,
+            'reward_level_cleared': 500
         }
+
+    def add_reward(self, key):
+            self.current_state['reward'] += self.reward_context.get(key, 0)
 
     def initialiseGame(self):
         self.gameState = 'playing'
-        [self.stage.removeSprite(sprite) for sprite in self.rockList]  # clear old rocks
+        [self.stage.removeSprite(sprite)
+         for sprite in self.rockList]  # clear old rocks
         if self.saucer is not None:
             self.killSaucer()
         self.startLives = 5
-        self.lives = self.startLives
         self.createNewShip()
         self.createLivesList()
         self.score = 0
         self.rockList = []
-        # Set level 1
-        self.level = 1
-        self.numRocks = 1
+        self.numRocks = 3
         self.nextLife = 10000
 
         self.createRocks(self.numRocks)
@@ -96,22 +98,25 @@ class Asteroids():
 
     def createNewShip(self):
         if self.ship:
-            [self.stage.spriteList.remove(debris) for debris in self.ship.shipDebrisList]
+            [self.stage.spriteList.remove(debris)
+             for debris in self.ship.shipDebrisList]
         self.ship = Ship(self.stage)
         self.stage.addSprite(self.ship.thrustJet)
         self.stage.addSprite(self.ship)
 
     def createLivesList(self):
-        #self.lives += 1
+        self.lives += 1
         self.livesList = []
         for i in range(1, self.startLives):
             self.addLife(i)
+        self.lives = self.startLives
 
     def addLife(self, lifeNumber):
-        #self.lives += 1
+        self.lives += 1
         ship = Ship(self.stage)
         self.stage.addSprite(ship)
-        ship.position.x = self.stage.width - (lifeNumber * ship.boundingRect.width) - 10
+        ship.position.x = self.stage.width - \
+            (lifeNumber * ship.boundingRect.width) - 10
         ship.position.y = 0 + ship.boundingRect.height
         self.livesList.append(ship)
 
@@ -119,6 +124,7 @@ class Asteroids():
         for _ in range(0, numRocks):
             position = Vector2d(random.randrange(-10, 10),
                                 random.randrange(-10, 10))
+
             newRock = Rock(self.stage, position, Rock.largeRockType)
             self.stage.addSprite(newRock)
             self.rockList.append(newRock)
@@ -137,11 +143,15 @@ class Asteroids():
             timePassed += clock.tick(60)
             frameCount += 1
             if frameCount % 10 == 0:  # every 10 frames
+                # nearest integer
                 self.fps = round((frameCount / (timePassed / 1000.0)))
+                # reset counter
                 timePassed = 0
                 frameCount = 0
 
             self.secondsCount += 1
+            if self.gameState == 'playing':
+                self.add_reward('reward_survive_frame')
 
             self.input(pygame.event.get())
 
@@ -159,16 +169,16 @@ class Asteroids():
                 self.displayFps()  # for debug
             self.checkScore()
 
-            # Process keys and game states
+            # Process keys
             if self.gameState == 'playing':
                 self.playing()
             elif self.gameState == 'exploding':
                 self.exploding()
-            elif self.gameState == 'win':
-                self.displayWinScreen()
             else:
                 self.displayText()
-
+            state, reward = self.step()
+            print("Reward:", reward, "Game_State:", self.gameState)
+            # Double buffer draw
             pygame.display.flip()
 
     def playing(self):
@@ -177,7 +187,6 @@ class Asteroids():
         else:
             self.processKeys()
             self.checkCollisions()
-            # Level up when all rocks clear.
             if len(self.rockList) == 0:
                 self.levelUp()
 
@@ -190,54 +199,31 @@ class Asteroids():
         if self.secondsCount % 2000 == 0 and self.saucer is None:
             randVal = random.randrange(0, 10)
             if randVal <= 3:
-                self.saucer = Saucer(self.stage, Saucer.smallSaucerType, self.ship)
+                self.saucer = Saucer(
+                    self.stage, Saucer.smallSaucerType, self.ship)
             else:
-                self.saucer = Saucer(self.stage, Saucer.largeSaucerType, self.ship)
+                self.saucer = Saucer(
+                    self.stage, Saucer.largeSaucerType, self.ship)
             self.stage.addSprite(self.saucer)
 
     def exploding(self):
         self.explodingCount += 1
         if self.explodingCount > self.explodingTtl:
             self.gameState = 'playing'
-            [self.stage.spriteList.remove(debris) for debris in self.ship.shipDebrisList]
+            [self.stage.spriteList.remove(debris)
+             for debris in self.ship.shipDebrisList]
             self.ship.shipDebrisList = []
+
             if self.lives == 0:
                 self.ship.visible = False
             else:
                 self.createNewShip()
 
     def levelUp(self):
-        if self.level == 1:
-            self.level = 2
-            self.numRocks = 2
-            self.createRocks(self.numRocks)
-        elif self.level == 2:
-            self.level = 3
-            self.numRocks = 3
-            self.createRocks(self.numRocks)
-        elif self.level == 3:
-            # Win after level 3
-            self.gameState = 'win'
-
-    def displayWinScreen(self):
-        # Display victory
-        font = pygame.font.Font('../res/Hyperspace.otf', 50)
-        winText = font.render("You WIN!!!", True, (255, 255, 0))
-        winRect = winText.get_rect(center=(self.stage.width / 2, self.stage.height / 2))
-        self.stage.screen.fill((0, 0, 0))
-        self.stage.screen.blit(winText, winRect)
-        pygame.display.flip()
-        waiting = True
-        while waiting:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    waiting = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        waiting = False
-        pygame.quit()
-        sys.exit()
-
+        self.numRocks += 1
+        self.createRocks(self.numRocks)
+        self.add_reward('reward_level_cleared')
+    # move this kack somewhere else!
     def displayText(self):
         font1 = pygame.font.Font('../res/Hyperspace.otf', 50)
         font2 = pygame.font.Font('../res/Hyperspace.otf', 20)
@@ -248,13 +234,16 @@ class Asteroids():
         titleTextRect.y = self.stage.height/2 - titleTextRect.height*2
         self.stage.screen.blit(titleText, titleTextRect)
 
-        keysText = font2.render('(C) 1979 Atari INC.', True, (255, 255, 255))
+        keysText = font2.render(
+            '(C) 1979 Atari INC.', True, (255, 255, 255))
         keysTextRect = keysText.get_rect(centerx=self.stage.width/2)
         keysTextRect.y = self.stage.height - keysTextRect.height - 20
         self.stage.screen.blit(keysText, keysTextRect)
 
-        instructionText = font3.render('Press start to Play', True, (200, 200, 200))
-        instructionTextRect = instructionText.get_rect(centerx=self.stage.width/2)
+        instructionText = font3.render(
+            'Press start to Play', True, (200, 200, 200))
+        instructionTextRect = instructionText.get_rect(
+            centerx=self.stage.width/2)
         instructionTextRect.y = self.stage.height/2 - instructionTextRect.height
         self.stage.screen.blit(instructionText, instructionTextRect)
 
@@ -269,10 +258,12 @@ class Asteroids():
         if self.paused:
             font1 = pygame.font.Font('../res/Hyperspace.otf', 30)
             pausedText = font1.render("Paused", True, (255, 255, 255))
-            textRect = pausedText.get_rect(centerx=self.stage.width/2, centery=self.stage.height/2)
+            textRect = pausedText.get_rect(
+                centerx=self.stage.width/2, centery=self.stage.height/2)
             self.stage.screen.blit(pausedText, textRect)
             pygame.display.update()
 
+    # Should move the ship controls into the ship class
     def input(self, events):
         self.frameAdvance = False
         for event in events:
@@ -289,46 +280,57 @@ class Asteroids():
                     elif event.key == K_h:
                         self.ship.enterHyperSpace()
                 elif self.gameState == 'attract_mode':
+                    # Start a new game
                     if event.key == K_RETURN:
                         self.initialiseGame()
 
                 if event.key == K_p:
-                    self.paused = not self.paused
+                    if self.paused:  # (is True)
+                        self.paused = False
+                    else:
+                        self.paused = True
 
                 if event.key == K_j:
-                    self.showingFPS = not self.showingFPS
+                    if self.showingFPS:  # (is True)
+                        self.showingFPS = False
+                    else:
+                        self.showingFPS = True
 
                 if event.key == K_f:
                     pygame.display.toggle_fullscreen()
+
+                # if event.key == K_k:
+                    # self.killShip()
             elif event.type == KEYUP:
                 if event.key == K_o:
                     self.frameAdvance = True
 
     def processKeys(self):
         key = pygame.key.get_pressed()
-
+        pressed = False
         if key[K_LEFT] or key[K_z]:
             self.ship.rotateLeft()
+            pressed = True
         elif key[K_RIGHT] or key[K_x]:
             self.ship.rotateRight()
+            pressed = True
 
         if key[K_UP] or key[K_n]:
             self.ship.increaseThrust()
             self.ship.thrustJet.accelerating = True
+            pressed = True
         else:
             self.ship.thrustJet.accelerating = False
+            pressed = True
+        if not pressed and self.gameState == 'playing':
+            self.add_reward('reward_do_nothing')
+    # Check for ship hitting the rocks etc.
 
     def checkCollisions(self):
 
         # Ship bullet hit rock?
         newRocks = []
         shipHit, saucerHit = False, False
-        reward_context = {
-            "ship_hit": False,
-            "rocks_destroyed": [],
-            "alien_hit": None,
-            "hyperspace": None,
-        }
 
         # Rocks
         for rock in self.rockList:
@@ -339,7 +341,7 @@ class Asteroids():
                 if p is not None:
                     shipHit = True
                     rockHit = True
-                reward_context["ship_hit"] = True
+
             if self.saucer is not None:
                 if rock.collidesWith(self.saucer):
                     saucerHit = True
@@ -363,23 +365,28 @@ class Asteroids():
                     playSound("explode1")
                     newRockType = Rock.mediumRockType
                     self.score += 50
+                    if self.gameState == 'playing':
+                        self.add_reward('reward_hit_large_rock')
                 elif rock.rockType == Rock.mediumRockType:
                     playSound("explode2")
                     newRockType = Rock.smallRockType
                     self.score += 100
+                    if self.gameState == 'playing':
+                        self.add_reward('reward_hit_medium_rock')
                 else:
                     playSound("explode3")
                     self.score += 200
 
                 if rock.rockType != Rock.smallRockType:
+                    # new rocks
                     for _ in range(0, 2):
                         position = Vector2d(rock.position.x, rock.position.y)
                         newRock = Rock(self.stage, position, newRockType)
                         self.stage.addSprite(newRock)
                         self.rockList.append(newRock)
-                reward_context["rocks_destroyed"].append(rock.rockType) ## for rewards
 
                 self.createDebris(rock)
+
 
         # Saucer bullets
         if self.saucer is not None:
@@ -391,21 +398,25 @@ class Asteroids():
                     shipHit = True
                     saucerHit = True
 
+
             if saucerHit:
                 self.createDebris(self.saucer)
                 self.killSaucer()
 
         if shipHit:
             self.killShip()
+            self.add_reward('reward_life_lost')
+            # comment in to pause on collision
+            #self.paused = True
 
     def killShip(self):
         stopSound("thrust")
         playSound("explode2")
         self.explodingCount = 0
         self.lives -= 1
-        #if self.livesList:
-        #    ship = self.livesList.pop()
-        #    self.stage.removeSprite(ship)
+        if (self.livesList):
+            ship = self.livesList.pop()
+            self.stage.removeSprite(ship)
 
         self.stage.removeSprite(self.ship)
         self.stage.removeSprite(self.ship.thrustJet)
@@ -413,11 +424,17 @@ class Asteroids():
         self.ship.explode()
 
     def killSaucer(self):
+
         stopSound("lsaucer")
         stopSound("ssaucer")
         playSound("explode2")
         self.stage.removeSprite(self.saucer)
+
         self.saucer = None
+        if self.saucer and self.saucer.saucerType == Saucer.smallSaucerType:
+            self.add_reward('reward_hit_alien_fast')
+        else:
+            self.add_reward('reward_hit_alien_slow')
 
     def createDebris(self, sprite):
         for _ in range(0, 25):
@@ -429,74 +446,24 @@ class Asteroids():
         font2 = pygame.font.Font('../res/Hyperspace.otf', 15)
         fpsStr = str(self.fps)+(' FPS')
         scoreText = font2.render(fpsStr, True, (255, 255, 255))
-        scoreTextRect = scoreText.get_rect(centerx=(self.stage.width/2), centery=15)
+        scoreTextRect = scoreText.get_rect(
+            centerx=(self.stage.width/2), centery=15)
         self.stage.screen.blit(scoreText, scoreTextRect)
 
     def checkScore(self):
         if self.score > 0 and self.score > self.nextLife:
             playSound("extralife")
             self.nextLife += 10000
-            self.lives += 1  # First, update lives count
-            self.addLife(self.lives - 1)
-            #self.addLife(self.lives)
+            self.addLife(self.lives)
 
-    def calculate_rewards(self, context: dict = None):
-
-        if context is None:
-            context = {}
-
-        reward = 0
-        notes = []
-
-        if context.get("ship_hit"):
-            reward += self.rewards_config['life_lost']
-            notes.append("Ship hit: -1000")
-
-        if context.get("hyperspace") == "safe":
-            reward += self.rewards_config['hyperspace_safe']
-            notes.append("Hyperspace safe: +50")
-        elif context.get("hyperspace") == "crash":
-            reward += self.rewards_config['hyperspace_crash']
-            notes.append("Hyperspace crash: -200")
-
-        for rock_type in context.get("rocks_destroyed", []):
-            if rock_type == Rock.largeRockType:
-                reward += self.rewards_config['hit_large_rock']
-                notes.append("Large rock destroyed: +50")
-            elif rock_type == Rock.mediumRockType:
-                reward += self.rewards_config['hit_medium_rock']
-                notes.append("Medium rock destroyed: +100")
-            elif rock_type == Rock.smallRockType:
-                reward += self.rewards_config['hit_small_rock']
-                notes.append("Small rock destroyed: +200")
-
-        if context.get("alien_hit") == "large":
-            reward += self.rewards_config['hit_alien_slow']
-            notes.append("Large saucer hit: +500")
-        elif context.get("alien_hit") == "small":
-            reward += self.rewards_config['hit_alien_fast']
-            notes.append("Small saucer hit: +1000")
-
-        if context.get("level_cleared"):
-            reward += self.rewards_config['level_cleared']
-            notes.append("Level cleared: +500")
-
-        if context.get("bullet_missed"):
-            reward += self.rewards_config['bullet_missed']
-            notes.append("Bullet missed: -5")
-
-        if context.get("rotated") == "near_threat":
-            reward += self.rewards_config['rotate_near_rock']
-            notes.append("Rotated near rock: +10")
-        elif context.get("rotated") == "no_threat":
-            reward += self.rewards_config['rotate_no_threat']
-            notes.append("Rotated with no threat: +5")
-
-        if reward == 0:
-            reward += self.rewards_config['survive_frame']
-            notes.append("Survived frame: +1")
-
-        return reward, notes
+    def step(self):
+        """
+        Returns the current game state and the reward for the agent.
+        You should call this after each frame update.
+        """
+        reward = self.current_state.get('reward', 0)
+        self.current_state['reward'] = 0  # reset reward after each step
+        return self.current_state, reward
 
 
 # Script to run the game
