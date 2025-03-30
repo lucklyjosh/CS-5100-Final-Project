@@ -64,21 +64,19 @@ class Weapon(VectorSprite):
                 laser.ttl = 0
         return collisionDetected        
 
-    def displaySword(self):
-        newSword = Sword(self, self.position, self.heading, self.ttl, self.velocity, self.stage)
-        if (self.currentWeapon == "Sword"):
-            self.stage.addSprite(newSword)
-        else:
-            self.stage.removeSprite(newSword)
-        
+    def displaySword(self, ship):
+        position = Vector2d(self.position.x, self.position.y)
+        newSword = Sword(position, self.heading, self.ttl, self.velocity, self.stage)
+        self.stage.addSprite(newSword)
     
     def swingSword(self, heading, ttl, velocity):
-        self.position = Vector2d(self.position.x, self.position.y)
+        position = Vector2d(self.position.x, self.position.y)
+        newSword = Sword(position, heading, ttl, velocity, self.stage)
         self.stage.addSprite(newSword)
 
     def swordCollision(self, target):
         collisionDetected = False
-        sword = Sword(self, self.position, self.ship, self.heading, self.ttl, self.stage)
+        sword = Sword(self.position, self.heading, self.ttl, self.velocity, self.stage)
         if sword.ttl > 0 and target.collidesWith(sword):
             collisionDetected = True
             sword.ttl = 0
