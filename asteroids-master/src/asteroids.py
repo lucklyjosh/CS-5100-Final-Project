@@ -61,6 +61,8 @@ class Asteroids():
         self.lives = 0
         self.current_reward = 0
         self.reward_context = {
+            'reward_close_to_rock': 10,
+            'reward_too_close_no_fire': -50,
             'reward_hit_alien_slow': 500,
             'reward_hit_alien_fast': 1000,
             'reward_hit_large_rock': 50,
@@ -68,12 +70,17 @@ class Asteroids():
             'reward_hit_small_rock': 200,
             'reward_survive_frame': 1,
             'reward_do_nothing': 0,
-            'reward_life_lost': -1000,
+            'reward_life_lost': -300,
             'reward_level_cleared': 500
         }
+        self.rocks_hit = 0
+        self.levels_completed = 0
+
 
     def add_reward(self, key):
-            self.current_reward += self.reward_context.get(key, 0)
+        reward_value = self.reward_context.get(key, 0)
+        self.current_reward += reward_value
+
 
 
     def initialiseGame(self):
@@ -168,7 +175,9 @@ class Asteroids():
 
             self.secondsCount += 1
             if self.gameState == 'playing':
+                print("Calling add_reward for staying alive.")
                 self.add_reward('reward_survive_frame')
+
 
             self.input(pygame.event.get())
 
@@ -210,15 +219,38 @@ class Asteroids():
         #     self.displayFps()  # for debug
         self.checkScore()
 
+
         # Process keys and game states
         if self.gameState == 'playing':
             self.agent_playing(action)
+            self.add_reward('reward_survive_frame')
         elif self.gameState == 'exploding':
             self.exploding()
         elif self.gameState == 'win':
             self.stage.displayWinScreen()
         else:
             self.stage.displayText()
+
+
+        min_distance = float('inf')
+
+        # Find the nearest rock
+        if self.rockList:
+            min_distance = min([
+                math.sqrt((rock.getPos().x - self.ship.getPos().x) ** 2 + (rock.getPos().y - self.ship.getPos().y) ** 2)
+                for rock in self.rockList
+            ])
+
+        # Encourage moving closer to rocks for attacks
+        if min_distance < 300:
+            self.add_reward('reward_close_to_rock')
+            print(f"🟢 Approaching rock, Reward added. Distance: {min_distance:.2f}")
+
+        # Penalize agent for reckless movement without shooting
+        if min_distance < 50 and action != 'fire':
+            self.add_reward('reward_too_close_no_fire')
+            print(f"🔴 Too close without firing! Penalty applied. Distance: {min_distance:.2f}")
+
 
         rockState = {}
         for index, rock in enumerate(self.rockList):
@@ -298,6 +330,8 @@ class Asteroids():
                 self.createNewShip()
 
     def levelUp(self):
+        self.levels_completed += 1
+        print(f"🚀 Level {self.levels_completed} completed! Moving to the next level.")
         if self.level == 1:
             self.level = 2
             self.numRocks = 2
@@ -425,6 +459,8 @@ class Asteroids():
             if rockHit:
                 self.rockList.remove(rock)
                 self.stage.spriteList.remove(rock)
+                self.rocks_hit += 1
+                print(f"💥 Rock destroyed! Total rocks hit: {self.rocks_hit}")
 
                 if rock.rockType == Rock.largeRockType:
                     playSound("explode1")

@@ -218,7 +218,7 @@ class Agent():
         pygame.quit()
         print("🛑 Game session ended.")
 
-    def q_learning(self, num_episodes=10000, gamma=0.9, epsilon=1, decay_rate=0.999, history_range=100, GUI=False):
+    def q_learning(self, num_episodes=10000, gamma=0.95, epsilon=1, decay_rate=0.999, history_range=100, GUI=False):
         if GUI==True:
             print("🚀 Initializing pygame...")
             pygame.init()
@@ -239,7 +239,9 @@ class Agent():
             for j in range(history_range):
                 rand_action = random.choice(actions)
                 obs, reward, done = self.game.step(rand_action)
-                reward = random.randint(-100, 100)
+                print(f"Action: {rand_action}, Reward: {reward}")
+
+                # reward = random.randint(-100, 100)
                 hist.append([self.hash(obs), reward, actions.index(rand_action)])
 
             # init subsequent rewards into the first loop
@@ -266,10 +268,31 @@ class Agent():
                 self.update_table[hash][first_action_idx] += 1
 
                 next_action = np.argmax(self.Q_table[hash])
+
+                if np.random.rand() < epsilon:
+                    next_action = random.randint(0, num_actions - 1)  # Explore: Random action
+                else:
+                    # Chase and shoot rock logic
+                    if '1' in hash[0]:  # Rock danger detected
+                        next_action = random.choice([1, 2, 0])  # Left, Right, or Up
+                    elif hash[1] == '1' and hash[2] in ['1', '2']:  # Rock in view and close
+                        next_action = 3  # Fire
+                    elif hash[1] == '1':  # Rock in view but not close
+                        next_action = random.choice([1, 2])  # Left or Right to adjust aim
+                    elif hash[2] == '1':  # Rock mid-range, chase it
+                        next_action = 0  # Thrust (up)
+                    else:
+                        next_action = np.argmax(self.Q_table[hash])
+
+
                 obs, reward, done = self.game.step(actions[next_action])
-                reward = random.randint(-100, 100)
+                print(f"Next Action: {actions[next_action]}, Reward: {reward}")
+                # reward = random.randint(-100, 100)
                 new_hash = self.hash(obs)
                 hist.append([new_hash, reward, next_action])
+
+                epsilon *= decay_rate
+                epsilon = max(0.1, epsilon) 
 
                 # Render the game state
                 if GUI==True:
@@ -285,7 +308,7 @@ class Agent():
                     frame_count += 1
                     clock.tick(30)
 
-                    if frame_count > 3000:
+                    if frame_count > 5000:
                         done = True
                         print(self.Q_table)
                         print(self.update_table)
