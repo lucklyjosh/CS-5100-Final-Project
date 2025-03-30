@@ -28,7 +28,6 @@ class Weapon(VectorSprite):
         VectorSprite.__init__(self, position, heading, pointlist)
         self.bullets = []
         self.lasers = []
-        self.swords = []
         self.stage = stage
         self.weapons = ["Shooter", "Laser", "Sword"]
         self.currentWeapon = weapons[0]
@@ -64,28 +63,13 @@ class Weapon(VectorSprite):
             if laser.ttl > 0 and target.collidesWith(laser):
                 collisionDetected = True
                 laser.ttl = 0
-        return collisionDetected        
+        return collisionDetected
 
-    def displaySword(self):
-        position = Vector2d(self.position.x, self.position.y)
-        newSword = Sword(position, self.heading, self.ttl, self.angle, self.stage)
-        self.stage.addSprite(newSword)
-    
-    def swingSword(self, heading, ttl, angle):
-        if (len(self.swords) < self.maxSwords):
-            position = Vector2d(self.position.x, self.position.y)
-            newSword = Sword(position, heading, self, ttl, angle, self.stage)
-            self.swords.append(newSword)
-            self.stage.addSprite(newSword)
-            return True
-
-    def swordCollision(self, target):
-        collisionDetected = False
-        for sword in self.swords:
-            if sword.ttl > 0 and target.collidesWith(sword):
-                collisionDetected = True
-                sword.ttl = 0
-        return collisionDetected 
+    def swordCollision(self, sword, target):
+        if sword.useSword == False:
+            return False
+        else:
+            return target.collidesWith(sword)
 
 # Bullet class
 
@@ -128,26 +112,24 @@ class Laser(Point):
 
 
 #Sword class
-class Sword(Point):
+class Sword(VectorSprite):
     
-    def __init__(self, position, heading, weapon, ttl, angle, stage):
-        Point.__init__(self, position, heading, stage)
-        self.weapon = weapon
-        self.position = position
-        self.ttl = ttl
-        self.angle = angle
-        self.turnAngle = 6
+    def __init__(self, stage, ship):
+        position = Vector2d(stage.width/2, stage.height/2)
+        heading = Vector2d(0, 0)
         self.pointlist = [(0, -10), (-3, -30), (-7, -30), (-3, -40), 
                           (0, -80), (3, -40), (7, -30), (3, -30)]
+        self.ship = ship
+        self.useSword = False
+        VectorSprite.__init__(self, position, heading, self.pointlist)
 
-    def move(self):
-        Point.move(self)
-        if (self.ttl <= 0):
-            self.weapon.swords.remove(self)
     
-    def rotateLeft(self):
-        self.angle += self.turnAngle
+    def draw(self):
+        if self.useSword and self.ship.inHyperSpace == False:
+            self.color = (255, 255, 255)
+        else:
+            self.color = (0, 0, 0)
 
-    def rotateRight(self):
-        self.angle -= self.turnAngle
+        VectorSprite.draw(self)
+        return self.transformedPointlist
 

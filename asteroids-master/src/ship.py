@@ -40,7 +40,7 @@ class Ship(Weapon):
     maxLasers = 3
     laserTtl = 10
     swordVelocity = 13.0
-    swordTtl = 20
+    swordTtl = 100
     maxSwords = 2
 
     def __init__(self, stage):
@@ -48,11 +48,11 @@ class Ship(Weapon):
         position = Vector2d(stage.width/2, stage.height/2)
         heading = Vector2d(0, 0)
         self.thrustJet = ThrustJet(stage, self)
+        self.sword = Sword(stage, self)
         self.shipDebrisList = []
         self.visible = True
         self.inHyperSpace = False
         pointlist = [(0, -10), (6, 10), (3, 7), (-3, 7), (-6, 10)]
-
         Weapon.__init__(self, position, heading, pointlist, stage, self.weapons, self.currentWeapon)
 
     def draw(self):
@@ -75,18 +75,12 @@ class Ship(Weapon):
     def rotateLeft(self):
         self.angle += self.turnAngle
         self.thrustJet.angle += self.turnAngle
-        if (self.currentWeapon == "Laser"):
-            Laser.rotateLeft()
-        if (self.currentWeapon == "Sword"):
-            Sword.rotateLeft()
+        self.sword.angle += self.turnAngle
 
     def rotateRight(self):
         self.angle -= self.turnAngle
         self.thrustJet.angle -= self.turnAngle
-        if (self.currentWeapon == "Laser"):
-            Laser.rotateRight()
-        if (self.currentWeapon == "Sword"):
-            Sword.rotateRight()
+        self.sword.angle -= self.turnAngle
 
     def increaseThrust(self):
         playSoundContinuous("thrust")
@@ -111,6 +105,8 @@ class Ship(Weapon):
         self.heading.y += dy
         self.thrustJet.heading.x += dx
         self.thrustJet.heading.y += dy
+        self.sword.heading.x += dx
+        self.sword.heading.y += dy
 
     def move(self):
         VectorSprite.move(self)
@@ -171,9 +167,8 @@ class Ship(Weapon):
             Weapon.fireLaser(self, heading, self.laserTtl)
             playSound("laser")
     
-    def swingSword(self):
-        if self.inHyperSpace == False:
-            Weapon.swingSword(self, self.heading, self.swordTtl, self.angle)
+    def useSword(self, displaySword):
+        self.sword.useSword = displaySword
 
     #
     def enterHyperSpace(self):
