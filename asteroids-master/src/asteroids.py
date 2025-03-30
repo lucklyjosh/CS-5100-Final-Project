@@ -58,7 +58,7 @@ class Asteroids():
         self.secondsCount = 1
         self.score = 0
         self.ship = None
-        self.weapons = ["Shooter", "Sword"]
+        self.weapons = ["Shooter", "Laser", "Sword"]
         self.currentWeapon = self.weapons[0]
         self.lives = 0
         self.leaderboard = []
@@ -259,17 +259,21 @@ class Asteroids():
                         if self.currentWeapon == "Shooter":
                             self.ship.fireBullet()
                         else:
-                            self.ship.swingSword()    
+                            self.ship.fireLaser()    
                     elif event.key == K_b:
                         if self.currentWeapon == "Shooter":
                             self.ship.fireBullet()
                         else:
-                            self.ship.swingSword()    
+                            self.ship.fireLaser()    
                     elif event.key == K_h:
                         self.ship.enterHyperSpace()
                     elif event.key == K_w:
+                        stopSound("laser")
                         if self.currentWeapon == self.weapons[0]:
                             self.currentWeapon = self.weapons[1]
+                        elif self.currentWeapon == self.weapons[1]:
+                            self.currentWeapon = self.weapons[2]
+                            Weapon.displaySword(self)
                         else:
                             self.currentWeapon = self.weapons[0]        
                 elif self.gameState == 'attract_mode':
@@ -338,11 +342,11 @@ class Asteroids():
                 if self.saucer.bulletCollision(rock):
                     rockHit = True
 
-                if self.ship.bulletCollision(self.saucer):
+                if self.ship.bulletCollision(self.saucer) or self.ship.laserCollision(self.saucer):
                     saucerHit = True
                     self.score += self.saucer.scoreValue
 
-            if self.ship.bulletCollision(rock):
+            if self.ship.bulletCollision(rock) or self.ship.laserCollision(rock):
                 rockHit = True
 
             if rockHit:
@@ -392,6 +396,7 @@ class Asteroids():
             #self.paused = True
 
     def killShip(self):
+        stopSound("laser")
         stopSound("thrust")
         playSound("explode2")
         self.explodingCount = 0

@@ -34,8 +34,11 @@ class Ship(Weapon):
     bulletVelocity = 13.0
     maxBullets = 4
     bulletTtl = 35
-    weapons = ["Shooter", "Sword"]
+    weapons = ["Shooter", "Laser", "Sword"]
     currentWeapon = weapons[0]
+    laserVelocity = 5
+    maxLasers = 3
+    laserTtl = 10
     swordVelocity = 13.0
     swordTtl = 20
 
@@ -49,7 +52,7 @@ class Ship(Weapon):
         self.inHyperSpace = False
         pointlist = [(0, -10), (6, 10), (3, 7), (-3, 7), (-6, 10)]
 
-        Shooter.__init__(self, position, heading, pointlist, stage)
+        Weapon.__init__(self, position, heading, pointlist, stage, self.weapons, self.currentWeapon)
 
     def draw(self):
         if self.visible:
@@ -71,10 +74,14 @@ class Ship(Weapon):
     def rotateLeft(self):
         self.angle += self.turnAngle
         self.thrustJet.angle += self.turnAngle
+        if (self.currentWeapon == "Laser"):
+            Laser.rotateLeft()
 
     def rotateRight(self):
         self.angle -= self.turnAngle
         self.thrustJet.angle -= self.turnAngle
+        if (self.currentWeapon == "Laser"):
+            Laser.rotateRight()
 
     def increaseThrust(self):
         playSoundContinuous("thrust")
@@ -148,7 +155,18 @@ class Ship(Weapon):
             heading = Vector2d(vx, vy)
             Weapon.fireBullet(self, heading, self.bulletTtl,
                                self.bulletVelocity)
+            stopSound("laser")
             playSound("fire")
+    
+    def fireLaser(self):
+        if self.inHyperSpace == False:
+            vx = self.laserVelocity * math.sin(radians(self.angle)) * -1
+            vy = self.laserVelocity * math.cos(radians(self.angle)) * -1
+            heading = Vector2d(vx, vy)
+            Weapon.fireLaser(self, heading, self.laserTtl)
+            playSound("laser")
+            if (self.laserTtl == 0):
+                stopSound("laser")
     
     def swingSword(self):
         if self.inHyperSpace == False:
