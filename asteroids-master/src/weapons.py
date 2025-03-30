@@ -19,6 +19,7 @@
 import random
 from util.vectorsprites import *
 from util import *
+from soundManager import *
 import pygame
 
 class Weapon(VectorSprite):
@@ -27,6 +28,7 @@ class Weapon(VectorSprite):
         VectorSprite.__init__(self, position, heading, pointlist)
         self.bullets = []
         self.lasers = []
+        self.swords = []
         self.stage = stage
         self.weapons = ["Shooter", "Laser", "Sword"]
         self.currentWeapon = weapons[0]
@@ -64,22 +66,25 @@ class Weapon(VectorSprite):
                 laser.ttl = 0
         return collisionDetected        
 
-    def displaySword(self, ship):
+    def displaySword(self):
         position = Vector2d(self.position.x, self.position.y)
-        newSword = Sword(position, self.heading, self.ttl, self.velocity, self.stage)
+        newSword = Sword(position, self.heading, self.ttl, self.angle, self.stage)
         self.stage.addSprite(newSword)
     
-    def swingSword(self, heading, ttl, velocity):
-        position = Vector2d(self.position.x, self.position.y)
-        newSword = Sword(position, heading, ttl, velocity, self.stage)
-        self.stage.addSprite(newSword)
+    def swingSword(self, heading, ttl, angle):
+        if (len(self.swords) < self.maxSwords):
+            position = Vector2d(self.position.x, self.position.y)
+            newSword = Sword(position, heading, self, ttl, angle, self.stage)
+            self.swords.append(newSword)
+            self.stage.addSprite(newSword)
+            return True
 
     def swordCollision(self, target):
         collisionDetected = False
-        sword = Sword(self.position, self.heading, self.ttl, self.velocity, self.stage)
-        if sword.ttl > 0 and target.collidesWith(sword):
-            collisionDetected = True
-            sword.ttl = 0
+        for sword in self.swords:
+            if sword.ttl > 0 and target.collidesWith(sword):
+                collisionDetected = True
+                sword.ttl = 0
         return collisionDetected 
 
 # Bullet class
@@ -87,32 +92,33 @@ class Weapon(VectorSprite):
 
 class Bullet(Point):
 
-    def __init__(self, position, heading, shooter, ttl, velocity, stage):
+    def __init__(self, position, heading, weapon, ttl, velocity, stage):
         Point.__init__(self, position, heading, stage)
-        self.shooter = shooter
+        self.weapon = weapon
         self.ttl = ttl
         self.velocity = velocity
 
     def move(self):
         Point.move(self)
         if (self.ttl <= 0):
-            self.shooter.bullets.remove(self)
+            self.weapon.bullets.remove(self)
 
 # Laser class
 class Laser(Point):
 
-    def __init__(self, position, heading, shooter, ttl, angle, stage):
+    def __init__(self, position, heading, weapon, ttl, angle, stage):
         Point.__init__(self, position, heading, stage)
-        self.shooter = shooter
+        self.weapon = weapon
         self.ttl = ttl
-        self.pointlist = [(0, 0), (-1, -350), (1, -350)]
         self.angle = angle
         self.turnAngle = 6
+        self.pointlist = [(0, 0), (-1, -400), (1, -400)]
     
     def move(self):
         Point.move(self)
         if (self.ttl <= 0):
-            self.shooter.lasers.remove(self)
+            self.weapon.lasers.remove(self)
+            stopSound("laser")
     
     def rotateLeft(self):
         self.angle += self.turnAngle
@@ -124,17 +130,24 @@ class Laser(Point):
 #Sword class
 class Sword(Point):
     
-    def __init__(self, position, heading, ttl, velocity, stage):
+    def __init__(self, position, heading, weapon, ttl, angle, stage):
         Point.__init__(self, position, heading, stage)
+        self.weapon = weapon
         self.position = position
         self.ttl = ttl
-        self.velocity = velocity
-        self.pointlist = [(3, 10), (60, 100), (10, 25), (40, -5)]
+        self.angle = angle
+        self.turnAngle = 6
+        self.pointlist = [(0, -10), (-3, -30), (-7, -30), (-3, -40), 
+                          (0, -80), (3, -40), (7, -30), (3, -30)]
 
     def move(self):
         Point.move(self)
-
+        if (self.ttl <= 0):
+            self.weapon.swords.remove(self)
     
+    def rotateLeft(self):
+        self.angle += self.turnAngle
 
-        
-        
+    def rotateRight(self):
+        self.angle -= self.turnAngle
+

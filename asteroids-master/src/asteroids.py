@@ -263,17 +263,17 @@ class Asteroids():
                     elif event.key == K_b:
                         if self.currentWeapon == "Shooter":
                             self.ship.fireBullet()
+                        elif self.currentWeapon == "Laser":
+                            self.ship.fireLaser()   
                         else:
-                            self.ship.fireLaser()    
+                            self.ship.swingSword()
                     elif event.key == K_h:
                         self.ship.enterHyperSpace()
                     elif event.key == K_w:
-                        stopSound("laser")
                         if self.currentWeapon == self.weapons[0]:
                             self.currentWeapon = self.weapons[1]
                         elif self.currentWeapon == self.weapons[1]:
                             self.currentWeapon = self.weapons[2]
-                            Weapon.displaySword(self)
                         else:
                             self.currentWeapon = self.weapons[0]        
                 elif self.gameState == 'attract_mode':
@@ -342,11 +342,11 @@ class Asteroids():
                 if self.saucer.bulletCollision(rock):
                     rockHit = True
 
-                if self.ship.bulletCollision(self.saucer) or self.ship.laserCollision(self.saucer):
+                if self.ship.bulletCollision(self.saucer) or self.ship.laserCollision(self.saucer) or self.ship.swordCollision(self.saucer):
                     saucerHit = True
                     self.score += self.saucer.scoreValue
 
-            if self.ship.bulletCollision(rock) or self.ship.laserCollision(rock):
+            if self.ship.bulletCollision(rock) or self.ship.laserCollision(rock) or self.ship.swordCollision(rock):
                 rockHit = True
 
             if rockHit:

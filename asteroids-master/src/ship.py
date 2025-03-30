@@ -41,6 +41,7 @@ class Ship(Weapon):
     laserTtl = 10
     swordVelocity = 13.0
     swordTtl = 20
+    maxSwords = 2
 
     def __init__(self, stage):
 
@@ -76,12 +77,16 @@ class Ship(Weapon):
         self.thrustJet.angle += self.turnAngle
         if (self.currentWeapon == "Laser"):
             Laser.rotateLeft()
+        if (self.currentWeapon == "Sword"):
+            Sword.rotateLeft()
 
     def rotateRight(self):
         self.angle -= self.turnAngle
         self.thrustJet.angle -= self.turnAngle
         if (self.currentWeapon == "Laser"):
             Laser.rotateRight()
+        if (self.currentWeapon == "Sword"):
+            Sword.rotateRight()
 
     def increaseThrust(self):
         playSoundContinuous("thrust")
@@ -165,15 +170,10 @@ class Ship(Weapon):
             heading = Vector2d(vx, vy)
             Weapon.fireLaser(self, heading, self.laserTtl)
             playSound("laser")
-            if (self.laserTtl == 0):
-                stopSound("laser")
     
     def swingSword(self):
         if self.inHyperSpace == False:
-            vx = self.swordVelocity * math.sin(radians(self.angle)) * -1
-            vy = self.swordVelocity * math.cos(radians(self.angle)) * -1
-            heading = Vector2d(vx, vy)
-            Weapon.swingSword(self, heading, self.swordTtl, self.swordVelocity)
+            Weapon.swingSword(self, self.heading, self.swordTtl, self.angle)
 
     #
     def enterHyperSpace(self):
