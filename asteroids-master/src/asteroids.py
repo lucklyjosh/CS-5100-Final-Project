@@ -94,6 +94,7 @@ class Asteroids():
         self.rockList: List[Rock] = []
         # Set level 1 
         self.level = 1
+        self.levels_completed = 0
         self.numRocks = 3
         self.nextLife = 10000
 
