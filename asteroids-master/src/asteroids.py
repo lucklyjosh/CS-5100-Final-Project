@@ -589,8 +589,8 @@ if not pygame.mixer:
     print('Warning, sound disabled')
 
 #### uncomment to play the game manually with `python3 asteroids.py`
-initSoundManager()
-game = Asteroids()  # create object game from class Asteroids
-game.playGame()
+# initSoundManager()
+# game = Asteroids()  # create object game from class Asteroids
+# game.playGame()
 
 ####
