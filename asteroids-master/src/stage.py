@@ -32,14 +32,7 @@ class Stage:
         # If no screen size is provided pick the first available mode
         if dimensions == None:
             dimensions = pygame.display.list_modes()[0]
-
-        # pygame.display.set_mode(dimensions, FULLSCREEN)
-        # pygame.mouse.set_visible(False)
-
-        # # pygame.display.set_mode(dimensions)
-
-        # pygame.display.set_caption(caption)
-        # self.screen = pygame.display.get_surface()
+            
         self.screen = pygame.display.set_mode(dimensions)
         pygame.display.set_caption(caption)
         pygame.mouse.set_visible(False)
