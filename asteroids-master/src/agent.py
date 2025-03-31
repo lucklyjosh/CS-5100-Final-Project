@@ -172,7 +172,7 @@ class Agent():
             filename = args[0]
         elif len(args) == 0:
             # load the most recent q_table
-            filename = "./q_tables/" + self.get_latest_q_table()[0]
+            filename = "./q_tables/" + self.get_latest_q_table()
             with open(filename, "rb") as f:
                 q_table = pickle.load(f)
                 self.Q_table = q_table
@@ -352,7 +352,7 @@ class Agent():
         try:
             contents = os.listdir("./q_tables")
             contents.sort(reverse=True)
-            return contents
+            return contents[0]
         except Exception as e:
             return f"Error: {e}"
 
