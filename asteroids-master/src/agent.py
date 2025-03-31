@@ -324,8 +324,8 @@ class Agent():
 
                     if frame_count > 5000:
                         done = True
-                        # print(self.Q_table)
-                        # print(self.update_table)
+                        print(self.Q_table)
+                        print(self.update_table)
 
         pygame.quit()
         print("🛑 Game session ended.")
