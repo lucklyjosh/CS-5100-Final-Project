@@ -166,6 +166,18 @@ class Agent():
 
     
     def play(self):
+        args = sys.argv[1:]
+        if len(args) > 0:
+            # load a specific q_table file
+            filename = args[0]
+        elif len(args) == 0:
+            # load the most recent q_table
+            filename = "./q_tables/" + self.get_latest_q_table()[0]
+            with open(filename, "rb") as f:
+                q_table = pickle.load(f)
+                self.Q_table = q_table
+                print(self.Q_table) 
+
         print("🚀 Initializing pygame...")
         pygame.init()
 
@@ -186,13 +198,6 @@ class Agent():
             print("Screen initialized:", self.game.stage.screen.get_size())
             print("Display driver:", pygame.display.get_driver())
 
-        # load q_table
-        filename = "./q_tables/" + self.get_latest_q_table()[0]
-        with open(filename, "rb") as f:
-            q_table = pickle.load(f)
-            self.Q_table = q_table
-            print(self.Q_table)
-
         running = True
         frame_count = 0
         while running:
@@ -206,7 +211,12 @@ class Agent():
             print("🔑 State Hash:", state_hash)
 
             # select action for next round based off of current state
-            action = actions[np.argmax(self.Q_table[state_hash])]
+            if state_hash in self.Q_table:
+                action_idx = np.argmax(self.Q_table[state_hash])
+            else:
+                # if for some reason we've never gotten to state_hash in training, then pick a random action.
+                action_idx = random.randint(0, len(actions)-1)
+            action = actions[action_idx]
             print("Action:", action)
 
             # Render the game state
@@ -350,6 +360,6 @@ if __name__ == "__main__":
     game = Asteroids()
     agent = Agent(game)
     # uncomment to train:
-    agent.q_learning(num_episodes = 1, GUI=True)
+    # agent.q_learning(num_episodes = 1, GUI=True)
     # uncomment to play with trained model:
-    # agent.play()
+    agent.play()

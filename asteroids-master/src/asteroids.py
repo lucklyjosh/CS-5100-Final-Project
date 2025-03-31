@@ -81,8 +81,6 @@ class Asteroids():
         reward_value = self.reward_context.get(key, 0)
         self.current_reward += reward_value
 
-
-
     def initialiseGame(self):
         self.gameState = 'playing'
         [self.stage.removeSprite(sprite)
