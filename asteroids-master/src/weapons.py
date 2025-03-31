@@ -128,7 +128,7 @@ class Sword(VectorSprite):
         if self.useSword and self.ship.inHyperSpace == False:
             self.color = (255, 255, 255)
         else:
-            self.color = (0, 0, 0)
+            self.color = (10, 10, 10)
 
         VectorSprite.draw(self)
         return self.transformedPointlist
