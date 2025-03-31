@@ -336,7 +336,7 @@ class Agent():
                     #     done = True
                     #     print(self.Q_table)
                     #     print(self.update_table)
-
+            print(f'episode {i} completed at {datetime.now()} with the following q_table:')
             print(self.Q_table)
 
         pygame.quit()
