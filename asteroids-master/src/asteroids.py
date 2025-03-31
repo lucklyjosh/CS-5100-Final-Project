@@ -61,7 +61,6 @@ class Asteroids():
         self.ship = None
         self.weapons = ["Shooter", "Laser", "Sword"]
         self.currentWeapon = self.weapons[0]
-        self.lives = 0
         self.leaderboard = []
         self.lives = 0
         self.current_reward = 0
@@ -98,8 +97,6 @@ class Asteroids():
         self.createNewShip()
         self.createLivesList()
         self.score = 0
-        self.rockList = []
-        self.numRocks = 3
         self.rockList: List[Rock] = []
         # Set level 1 
         self.level = 1
@@ -344,47 +341,7 @@ class Asteroids():
         self.numRocks += 1
         self.createRocks(self.numRocks)
 
-    # move this kack somewhere else!
-    def displayText(self):
-        font1 = pygame.font.Font('../res/Hyperspace.otf', 50)
-        font2 = pygame.font.Font('../res/Hyperspace.otf', 20)
-        font3 = pygame.font.Font('../res/Hyperspace.otf', 30)
-
-        titleText = font1.render('Asteroids', True, (180, 180, 180))
-        titleTextRect = titleText.get_rect(centerx=self.stage.width/2)
-        titleTextRect.y = self.stage.height/2 - titleTextRect.height*2
-        self.stage.screen.blit(titleText, titleTextRect)
-
-        keysText = font2.render(
-            '(C) 1979 Atari INC.', True, (255, 255, 255))
-        keysTextRect = keysText.get_rect(centerx=self.stage.width/2)
-        keysTextRect.y = self.stage.height - keysTextRect.height - 20
-        self.stage.screen.blit(keysText, keysTextRect)
-
-        instructionText = font3.render(
-            'Press start to Play', True, (200, 200, 200))
-        instructionTextRect = instructionText.get_rect(
-            centerx=self.stage.width/2)
-        instructionTextRect.y = self.stage.height/2 - instructionTextRect.height
-        self.stage.screen.blit(instructionText, instructionTextRect)
-
-    def displayScore(self):
-        font1 = pygame.font.Font('../res/Hyperspace.otf', 30)
-        scoreStr = str("%02d" % self.score)
-        scoreText = font1.render(scoreStr, True, (200, 200, 200))
-        scoreTextRect = scoreText.get_rect(centerx=100, centery=45)
-        self.stage.screen.blit(scoreText, scoreTextRect)
-
-    def displayPaused(self):
-        if self.paused:
-            font1 = pygame.font.Font('../res/Hyperspace.otf', 30)
-            pausedText = font1.render("Paused", True, (255, 255, 255))
-            textRect = pausedText.get_rect(
-                centerx=self.stage.width/2, centery=self.stage.height/2)
-            self.stage.screen.blit(pausedText, textRect)
-            pygame.display.update()
-
-    # Should move the ship controls into the ship class
+        # Should move the ship controls into the ship class
         self.levels_completed += 1
         print(f"🚀 Level {self.levels_completed} completed! Moving to the next level.")
         if self.level == 1:
@@ -615,14 +572,6 @@ class Asteroids():
             debris = Debris(position, self.stage)
             self.stage.addSprite(debris)
 
-    def displayFps(self):
-        font2 = pygame.font.Font('../res/Hyperspace.otf', 15)
-        fpsStr = str(self.fps)+(' FPS')
-        scoreText = font2.render(fpsStr, True, (255, 255, 255))
-        scoreTextRect = scoreText.get_rect(
-            centerx=(self.stage.width/2), centery=15)
-        self.stage.screen.blit(scoreText, scoreTextRect)
-
     def checkScore(self):
         if self.score > 0 and self.score > self.nextLife:
             playSound("extralife")
@@ -639,13 +588,9 @@ if not pygame.font:
 if not pygame.mixer:
     print('Warning, sound disabled')
 
+#### uncomment to play the game manually with `python3 asteroids.py`
 initSoundManager()
 game = Asteroids()  # create object game from class Asteroids
 game.playGame()
-
-####
-# initSoundManager()
-# game = Asteroids()  # create object game from class Asteroids
-# game.playGame()
 
 ####

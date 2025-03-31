@@ -87,8 +87,6 @@ class Rock(VectorSprite):
         
         # Original Asteroid didn't have spinning rocks but they look nicer
         self.angle += 1
-    
-    
 
     # call base class
     
