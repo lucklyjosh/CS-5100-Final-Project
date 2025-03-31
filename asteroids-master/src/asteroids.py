@@ -327,7 +327,7 @@ class Asteroids():
         if self.level < self.numLevels:
             self.level += 1
             self.numRocks += 1
-            self.createRocks()
+            self.createRocks(self.numRocks)
         else:
             self.gameState = 'win'
 
