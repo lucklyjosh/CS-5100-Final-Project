@@ -1,9 +1,12 @@
+import pickle
 import pygame
 import sys
 from soundManager import *
 from asteroids import *
 import random
 import numpy as np
+import json
+from datetime import datetime
 
 class Agent():
 
@@ -173,6 +176,7 @@ class Agent():
         self.game.initialiseGame()
 
         actions = ['up', 'left', 'right', 'fire']
+        action = actions[3] # default first action to fire
         clock = pygame.time.Clock()
 
         print("🖥️ Checking screen surface...")
@@ -182,6 +186,13 @@ class Agent():
             print("Screen initialized:", self.game.stage.screen.get_size())
             print("Display driver:", pygame.display.get_driver())
 
+        # load q_table
+        filename = "./q_tables/" + self.get_latest_q_table()[0]
+        with open(filename, "rb") as f:
+            q_table = pickle.load(f)
+            self.Q_table = q_table
+            print(self.Q_table)
+
         running = True
         frame_count = 0
         while running:
@@ -189,11 +200,14 @@ class Agent():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-
-            action = random.choice(actions)
+            
             obs, reward, done = self.game.step(action)
             state_hash = self.hash(obs)
             print("🔑 State Hash:", state_hash)
+
+            # select action for next round based off of current state
+            action = actions[np.argmax(self.Q_table[state_hash])]
+            print("Action:", action)
 
             # Render the game state
             print("🔄 Rendering frame...")
@@ -310,14 +324,32 @@ class Agent():
 
                     if frame_count > 5000:
                         done = True
-                        print(self.Q_table)
-                        print(self.update_table)
+                        # print(self.Q_table)
+                        # print(self.update_table)
 
         pygame.quit()
         print("🛑 Game session ended.")
 
+        # save q table so we can use it
+        now = datetime.now()
+        formatted_date_time = now.strftime("%Y-%m-%d-%H:%M:%S") 
+        filename = f'q_table_{formatted_date_time}.pickle'
+        with open(filename, "wb") as f:
+            pickle.dump(self.Q_table, f)
+
+
+    def get_latest_q_table(self):
+        try:
+            contents = os.listdir("./q_tables")
+            contents.sort(reverse=True)
+            return contents
+        except Exception as e:
+            return f"Error: {e}"
+
 if __name__ == "__main__":
     game = Asteroids()
     agent = Agent(game)
+    # uncomment to train:
     agent.q_learning(num_episodes = 1, GUI=True)
+    # uncomment to play with trained model:
     # agent.play()
