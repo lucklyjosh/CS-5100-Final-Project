@@ -65,12 +65,12 @@ class Asteroids():
             'reward_too_close_no_fire': -50,
             'reward_hit_alien_slow': 500,
             'reward_hit_alien_fast': 1000,
-            'reward_hit_large_rock': 50,
-            'reward_hit_medium_rock': 100,
-            'reward_hit_small_rock': 200,
+            'reward_hit_large_rock': 100,
+            'reward_hit_medium_rock': 300,
+            'reward_hit_small_rock': 500,
             'reward_survive_frame': 1,
             'reward_do_nothing': 0,
-            'reward_life_lost': -300,
+            'reward_life_lost': -5000,
             'reward_level_cleared': 500
         }
         self.rocks_hit = 0
@@ -94,7 +94,7 @@ class Asteroids():
         self.rockList: List[Rock] = []
         # Set level 1 
         self.level = 1
-        self.numRocks = 1
+        self.numRocks = 3
         self.nextLife = 10000
 
         self.createRocks(self.numRocks)
@@ -240,12 +240,12 @@ class Asteroids():
         # Encourage moving closer to rocks for attacks
         if min_distance < 300:
             self.add_reward('reward_close_to_rock')
-            print(f"🟢 Approaching rock, Reward added. Distance: {min_distance:.2f}")
+            # print(f"🟢 Approaching rock, Reward added. Distance: {min_distance:.2f}")
 
         # Penalize agent for reckless movement without shooting
         if min_distance < 50 and action != 'fire':
             self.add_reward('reward_too_close_no_fire')
-            print(f"🔴 Too close without firing! Penalty applied. Distance: {min_distance:.2f}")
+            # print(f"🔴 Too close without firing! Penalty applied. Distance: {min_distance:.2f}")
 
 
         rockState = {}
@@ -447,7 +447,7 @@ class Asteroids():
                 self.rockList.remove(rock)
                 self.stage.spriteList.remove(rock)
                 self.rocks_hit += 1
-                print(f"💥 Rock destroyed! Total rocks hit: {self.rocks_hit}")
+                # print(f"💥 Rock destroyed! Total rocks hit: {self.rocks_hit}")
 
                 if rock.rockType == Rock.largeRockType:
                     playSound("explode1")

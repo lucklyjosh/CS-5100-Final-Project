@@ -242,7 +242,7 @@ class Agent():
         pygame.quit()
         print("🛑 Game session ended.")
 
-    def q_learning(self, num_episodes=10000, gamma=0.95, epsilon=1, decay_rate=0.999, history_range=100, GUI=False):
+    def q_learning(self, num_episodes=10000, gamma=0.95, epsilon=1, decay_rate=0.999, history_range=40, GUI=False):
         if GUI==True:
             print("🚀 Initializing pygame...")
             pygame.init()
@@ -263,7 +263,7 @@ class Agent():
             for j in range(history_range):
                 rand_action = random.choice(actions)
                 obs, reward, done = self.game.step(rand_action)
-                print(f"Action: {rand_action}, Reward: {reward}")
+                # print(f"Action: {rand_action}, Reward: {reward}")
 
                 # reward = random.randint(-100, 100)
                 hist.append([self.hash(obs), reward, actions.index(rand_action)])
@@ -310,7 +310,7 @@ class Agent():
 
 
                 obs, reward, done = self.game.step(actions[next_action])
-                print(f"Next Action: {actions[next_action]}, Reward: {reward}")
+                # print(f"Next Action: {actions[next_action]}, Reward: {reward}")
                 # reward = random.randint(-100, 100)
                 new_hash = self.hash(obs)
                 hist.append([new_hash, reward, next_action])
@@ -332,10 +332,12 @@ class Agent():
                     frame_count += 1
                     clock.tick(30)
 
-                    if frame_count > 5000:
-                        done = True
-                        print(self.Q_table)
-                        print(self.update_table)
+                    # if frame_count > 5000:
+                    #     done = True
+                    #     print(self.Q_table)
+                    #     print(self.update_table)
+
+            print(self.Q_table)
 
         pygame.quit()
         print("🛑 Game session ended.")
@@ -360,6 +362,6 @@ if __name__ == "__main__":
     game = Asteroids()
     agent = Agent(game)
     # uncomment to train:
-    agent.q_learning(num_episodes = 1, GUI=True)
+    agent.q_learning(num_episodes = 1000, GUI=True)
     # uncomment to play with trained model:
     # agent.play()
