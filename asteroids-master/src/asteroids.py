@@ -214,6 +214,7 @@ class Asteroids():
         self.checkScore()
 
         # Process keys and game states
+        self.secondsCount += 1
         if self.gameState == 'playing':
             self.agent_playing(action)
             self.add_reward('reward_survive_frame')
