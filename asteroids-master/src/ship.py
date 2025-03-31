@@ -69,6 +69,7 @@ class Ship(Weapon):
                     self.position.y = random.randrange(0, self.stage.height)
                     position = Vector2d(self.position.x, self.position.y)
                     self.thrustJet.position = position
+                    self.sword.position = position
 
         return self.transformedPointlist
 
