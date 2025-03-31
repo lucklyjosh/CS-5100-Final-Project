@@ -321,13 +321,13 @@ class Asteroids():
             else:
                 self.createNewShip()
 
-    def levelUp(self):
+    def levelUp(self,):
         self.levels_completed += 1
         print(f"🚀 Level {self.levels_completed} completed! Moving to the next level.")
         if self.level < self.numLevels:
             self.level += 1
             self.numRocks += 1
-            self.createRocks()
+            self.createRocks(self.numRocks)
         else:
             self.gameState = 'win'
 
