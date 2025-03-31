@@ -75,13 +75,11 @@ class Asteroids():
         }
         self.rocks_hit = 0
         self.levels_completed = 0
-
+        self.numLevels = 3
 
     def add_reward(self, key):
         reward_value = self.reward_context.get(key, 0)
         self.current_reward += reward_value
-
-
 
     def initialiseGame(self):
         self.gameState = 'playing'
@@ -162,7 +160,6 @@ class Asteroids():
         self.fps = 0.0
         # Main loop
         while True:
-
             # calculate fps
             timePassed += clock.tick(60)
             frameCount += 1
@@ -202,23 +199,19 @@ class Asteroids():
                 self.exploding()
             elif self.gameState == 'win':
                 self.stage.displayWinScreen()
+                done = True
             else:
                 self.stage.displayText()
 
             pygame.display.flip()
 
     def step(self, action):
-        # self.input(action)
+        done = False
 
-        # self.stage.screen.fill((10, 10, 10))
         self.stage.moveSprites()
-        # self.stage.drawSprites()
         self.doSaucerLogic()
         self.stage.displayScore(self.score)
-        # if self.showingFPS:
-        #     self.displayFps()  # for debug
         self.checkScore()
-
 
         # Process keys and game states
         if self.gameState == 'playing':
@@ -226,8 +219,11 @@ class Asteroids():
             self.add_reward('reward_survive_frame')
         elif self.gameState == 'exploding':
             self.exploding()
+            if self.lives == 0:
+                done = True
         elif self.gameState == 'win':
             self.stage.displayWinScreen()
+            done = True
         else:
             self.stage.displayText()
 
@@ -271,10 +267,6 @@ class Asteroids():
             }, # the whole Ship object
             'rocks': rockState
         }
-
-        done = False
-        if self.lives == 0 and self.gameState == 'exploding':
-            done = True
 
         reward = self.current_reward
         self.current_reward = 0  # reset reward after each step
@@ -332,16 +324,11 @@ class Asteroids():
     def levelUp(self):
         self.levels_completed += 1
         print(f"🚀 Level {self.levels_completed} completed! Moving to the next level.")
-        if self.level == 1:
-            self.level = 2
-            self.numRocks = 2
-            self.createRocks(self.numRocks)
-        elif self.level == 2:
-            self.level = 3
-            self.numRocks = 3
-            self.createRocks(self.numRocks)
-        elif self.level == 3:
-            # Win after level 3
+        if self.level < self.numLevels:
+            self.level += 1
+            self.numRocks += 1
+            self.createRocks()
+        else:
             self.gameState = 'win'
 
     def input(self, events):
