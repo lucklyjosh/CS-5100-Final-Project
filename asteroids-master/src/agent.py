@@ -5,7 +5,7 @@ from soundManager import *
 from asteroids import *
 import random
 import numpy as np
-import json
+import pprint
 from datetime import datetime
 
 class Agent():
@@ -242,7 +242,7 @@ class Agent():
         pygame.quit()
         print("🛑 Game session ended.")
 
-    def q_learning(self, num_episodes=10000, gamma=0.95, epsilon=1, decay_rate=0.999, history_range=40, GUI=False):
+    def q_learning(self, num_episodes=10000, gamma=0.95, epsilon=1, decay_rate=0.999, history_range=30, GUI=False):
         if GUI==True:
             print("🚀 Initializing pygame...")
             pygame.init()
@@ -258,18 +258,17 @@ class Agent():
         hist = []
 
         for i in range(num_episodes):
+            epsilon = 1 # reset epsilon a the start at each episode. reintroduce variety every game.
             obs, reward, done = self.game.initialiseGame()
         
-            for j in range(history_range):
-                rand_action = random.choice(actions)
-                obs, reward, done = self.game.step(rand_action)
-                # print(f"Action: {rand_action}, Reward: {reward}")
+            if i == 0:
+                for j in range(history_range):
+                    rand_action = random.choice(actions)
+                    obs, reward, done = self.game.step(rand_action)
+                    hist.append([self.hash(obs), reward, actions.index(rand_action)])
 
-                # reward = random.randint(-100, 100)
-                hist.append([self.hash(obs), reward, actions.index(rand_action)])
-
-            # init subsequent rewards into the first loop
-            subsequent_rewards = sum(map(lambda arr: arr[1], hist[:-1]))
+                # init subsequent rewards into the first loop
+                subsequent_rewards = sum(map(lambda arr: arr[1], hist[:-1]))
 
             while not done:
                 for event in pygame.event.get():
@@ -288,7 +287,14 @@ class Agent():
                 # update subsequent_rewards
                 subsequent_rewards -= snapshot[1]
                 subsequent_rewards += hist[-1][1]
-                self.Q_table[hash][first_action_idx] = (1 - eta) * self.Q_table[hash][first_action_idx] + eta * subsequent_rewards
+
+                if subsequent_rewards <= history_range and subsequent_rewards > 0:
+                    # punish getting nothing
+                    rewards = -20
+                    # print(self.Q_table)
+                else:
+                    rewards = subsequent_rewards
+                self.Q_table[hash][first_action_idx] = (1 - eta) * self.Q_table[hash][first_action_idx] + eta * rewards
                 self.update_table[hash][first_action_idx] += 1
 
                 next_action = np.argmax(self.Q_table[hash])
@@ -313,6 +319,10 @@ class Agent():
                 # print(f"Next Action: {actions[next_action]}, Reward: {reward}")
                 # reward = random.randint(-100, 100)
                 new_hash = self.hash(obs)
+                if new_hash[1] == '1':
+                    reward += 10 # reward aiming at a rock
+                if new_hash[4] == '1':
+                    reward += 10 # reward aiming at alien
                 hist.append([new_hash, reward, next_action])
 
                 epsilon *= decay_rate
@@ -336,8 +346,9 @@ class Agent():
                     #     done = True
                     #     print(self.Q_table)
                     #     print(self.update_table)
+            print("---------------------------------")
             print(f'episode {i} completed at {datetime.now()} with the following q_table:')
-            print(self.Q_table)
+            pprint.pprint(self.Q_table)
 
         pygame.quit()
         print("🛑 Game session ended.")
