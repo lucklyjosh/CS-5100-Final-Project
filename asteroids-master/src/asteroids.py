@@ -197,6 +197,7 @@ class Asteroids():
             self.stage.drawSprites()
             self.doSaucerLogic()
             self.stage.displayScore(self.score)
+            self.stage.displayCurrentWeapon(self.currentWeapon)
             if self.showingFPS:
                 self.stage.displayFps()  # for debug
             self.checkScore()
@@ -385,7 +386,7 @@ class Asteroids():
                             self.ship.useSword(True)
                         else:
                             self.ship.useSword(False)
-                            self.currentWeapon = self.weapons[0]        
+                            self.currentWeapon = self.weapons[0]
                 elif self.gameState == 'attract_mode':
                     # Start a new game
                     if event.key == K_RETURN:
@@ -589,8 +590,8 @@ if not pygame.mixer:
     print('Warning, sound disabled')
 
 #### uncomment to play the game manually with `python3 asteroids.py`
-# initSoundManager()
-# game = Asteroids()  # create object game from class Asteroids
-# game.playGame()
+initSoundManager()
+game = Asteroids()  # create object game from class Asteroids
+game.playGame()
 
 ####

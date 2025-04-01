@@ -28,6 +28,8 @@ class Stage:
     def __init__(self, caption, dimensions=None):
         pygame.init()
         self.font = pygame.font.Font(None, 36)
+        self.weapons = ["Shooter", "Laser", "Sword"]
+        self.currentWeapon = self.weapons[0]
 
         # If no screen size is provided pick the first available mode
         if dimensions == None:
@@ -135,3 +137,10 @@ class Stage:
         scoreText = font2.render(fpsStr, True, (255, 255, 255))
         scoreTextRect = scoreText.get_rect(centerx=(self.width/2), centery=15)
         self.screen.blit(scoreText, scoreTextRect)
+    
+    def displayCurrentWeapon(self, currentWeapon):
+        font2 = pygame.font.Font('../res/Hyperspace.otf', 15)
+        weaponStr = "Current weapon: " + currentWeapon
+        weaponText = font2.render(weaponStr, True, (255, 255, 255))
+        weaponTextRect = weaponText.get_rect(centerx = 125, centery=750)
+        self.screen.blit(weaponText, weaponTextRect)
