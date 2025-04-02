@@ -352,7 +352,7 @@ class Agent():
                     pygame.display.flip()
 
                     frame_count += 1
-                    clock.tick(30)
+                    clock.tick(60)
             print("---------------------------------")
             print(f'episode {i} completed at {datetime.now()} with the following q_table:')
             pprint.pprint(self.Q_table)
