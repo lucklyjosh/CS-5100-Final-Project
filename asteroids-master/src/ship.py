@@ -21,9 +21,10 @@ from util.vectorsprites import *
 from shooter import *
 from math import *
 from soundManager import *
+from weapons import *
 
 
-class Ship(Shooter):
+class Ship(Weapon):
 
     # Class attributes
     acceleration = 0.2
@@ -33,18 +34,26 @@ class Ship(Shooter):
     bulletVelocity = 13.0
     maxBullets = 4
     bulletTtl = 35
+    weapons = ["Shooter", "Laser", "Sword"]
+    currentWeapon = weapons[0]
+    laserVelocity = 5
+    maxLasers = 3
+    laserTtl = 10
+    swordVelocity = 13.0
+    swordTtl = 100
+    maxSwords = 2
 
     def __init__(self, stage):
 
         position = Vector2d(stage.width/2, stage.height/2)
         heading = Vector2d(0, 0)
         self.thrustJet = ThrustJet(stage, self)
+        self.sword = Sword(stage, self)
         self.shipDebrisList = []
         self.visible = True
         self.inHyperSpace = False
         pointlist = [(0, -10), (6, 10), (3, 7), (-3, 7), (-6, 10)]
-
-        Shooter.__init__(self, position, heading, pointlist, stage)
+        Weapon.__init__(self, position, heading, pointlist, stage, self.weapons, self.currentWeapon)
 
     def draw(self):
         if self.visible:
@@ -60,16 +69,20 @@ class Ship(Shooter):
                     self.position.y = random.randrange(0, self.stage.height)
                     position = Vector2d(self.position.x, self.position.y)
                     self.thrustJet.position = position
+                    position = Vector2d(self.position.x, self.position.y)
+                    self.sword.position = position
 
         return self.transformedPointlist
 
     def rotateLeft(self):
         self.angle += self.turnAngle
         self.thrustJet.angle += self.turnAngle
+        self.sword.angle += self.turnAngle
 
     def rotateRight(self):
         self.angle -= self.turnAngle
         self.thrustJet.angle -= self.turnAngle
+        self.sword.angle -= self.turnAngle
 
     def increaseThrust(self):
         playSoundContinuous("thrust")
@@ -94,6 +107,8 @@ class Ship(Shooter):
         self.heading.y += dy
         self.thrustJet.heading.x += dx
         self.thrustJet.heading.y += dy
+        self.sword.heading.x += dx
+        self.sword.heading.y += dy
 
     def move(self):
         VectorSprite.move(self)
@@ -141,9 +156,21 @@ class Ship(Shooter):
             vx = self.bulletVelocity * math.sin(radians(self.angle)) * -1
             vy = self.bulletVelocity * math.cos(radians(self.angle)) * -1
             heading = Vector2d(vx, vy)
-            Shooter.fireBullet(self, heading, self.bulletTtl,
-                               self.bulletVelocity)
+            Weapon.fireBullet(self, heading, self.bulletTtl,
+                            self.bulletVelocity)
+            stopSound("laser")
             playSound("fire")
+    
+    def fireLaser(self):
+        if self.inHyperSpace == False:
+            vx = self.laserVelocity * math.sin(radians(self.angle)) * -1
+            vy = self.laserVelocity * math.cos(radians(self.angle)) * -1
+            heading = Vector2d(vx, vy)
+            Weapon.fireLaser(self, heading, self.laserTtl)
+            playSound("laser")
+    
+    def useSword(self, displaySword):
+        self.sword.useSword = displaySword
 
     #
     def enterHyperSpace(self):

@@ -36,6 +36,7 @@ def initSoundManager():
     sounds["thrust"] = pygame.mixer.Sound("../res/THRUST.WAV")
     sounds["sfire"] = pygame.mixer.Sound("../res/SFIRE.WAV")
     sounds["extralife"] = pygame.mixer.Sound("../res/LIFE.WAV")
+    sounds["laser"] = pygame.mixer.Sound("../res/LASER.wav")
 
 
 def playSound(soundName):

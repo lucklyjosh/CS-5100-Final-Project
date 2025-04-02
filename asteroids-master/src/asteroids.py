@@ -45,6 +45,7 @@ from soundManager import *
 class Asteroids():
 
     explodingTtl = 180
+    leaderboard = []
 
     def __init__(self):
         self.stage = Stage('Atari Asteroids', (1024, 768))
@@ -58,6 +59,9 @@ class Asteroids():
         self.secondsCount = 1
         self.score = 0
         self.ship = None
+        self.weapons = ["Shooter", "Laser", "Sword"]
+        self.currentWeapon = self.weapons[0]
+        self.leaderboard = []
         self.lives = 0
         self.current_reward = 0
         self.reward_context = {
@@ -127,6 +131,7 @@ class Asteroids():
         self.ship = Ship(self.stage)
         self.stage.addSprite(self.ship.thrustJet)
         self.stage.addSprite(self.ship)
+        self.stage.addSprite(self.ship.sword)
 
     def createLivesList(self):
         self.lives += 1
@@ -154,6 +159,7 @@ class Asteroids():
             self.rockList.append(newRock)
 
     def playGame(self):
+
         clock = pygame.time.Clock()
 
         frameCount = 0.0
@@ -189,6 +195,7 @@ class Asteroids():
             self.stage.drawSprites()
             self.doSaucerLogic()
             self.stage.displayScore(self.score)
+            self.stage.displayCurrentWeapon(self.currentWeapon)
             if self.showingFPS:
                 self.stage.displayFps()  # for debug
             self.checkScore()
@@ -320,10 +327,16 @@ class Asteroids():
 
             if self.lives == 0:
                 self.ship.visible = False
+                self.addToLeaderboard(self.score)
+                print(self.leaderboard)
             else:
                 self.createNewShip()
 
     def levelUp(self):
+        self.numRocks += 1
+        self.createRocks(self.numRocks)
+
+        # Should move the ship controls into the ship class
         self.levels_completed += 1
         print(f"🚀 Level {self.levels_completed} completed! Moving to the next level.")
         if self.level < self.numLevels:
@@ -343,11 +356,26 @@ class Asteroids():
                     sys.exit(0)
                 if self.gameState == 'playing':
                     if event.key == K_SPACE:
-                        self.ship.fireBullet()
+                        if self.currentWeapon == "Shooter":
+                            self.ship.fireBullet()
+                        elif self.currentWeapon == "Laser":
+                            self.ship.fireLaser()    
                     elif event.key == K_b:
-                        self.ship.fireBullet()
+                        if self.currentWeapon == "Shooter":
+                            self.ship.fireBullet()
+                        elif self.currentWeapon == "Laser":
+                            self.ship.fireLaser()   
                     elif event.key == K_h:
                         self.ship.enterHyperSpace()
+                    elif event.key == K_w:
+                        if self.currentWeapon == self.weapons[0]:
+                            self.currentWeapon = self.weapons[1]
+                        elif self.currentWeapon == self.weapons[1]:
+                            self.currentWeapon = self.weapons[2]
+                            self.ship.useSword(True)
+                        else:
+                            self.ship.useSword(False)
+                            self.currentWeapon = self.weapons[0]
                 elif self.gameState == 'attract_mode':
                     # Start a new game
                     if event.key == K_RETURN:
@@ -438,7 +466,7 @@ class Asteroids():
                 if self.saucer.bulletCollision(rock):
                     rockHit = True
 
-                if self.ship.bulletCollision(self.saucer):
+                if self.ship.bulletCollision(self.saucer) or self.ship.laserCollision(self.saucer) or self.ship.swordCollision(self.ship.sword, self.saucer):
                     saucerHit = True
                     self.score += self.saucer.scoreValue
                     
@@ -447,7 +475,7 @@ class Asteroids():
                     else:
                         self.add_reward('reward_hit_alien_slow')
 
-            if self.ship.bulletCollision(rock):
+            if self.ship.bulletCollision(rock) or self.ship.laserCollision(rock) or self.ship.swordCollision(self.ship.sword, rock):
                 rockHit = True
 
             if rockHit:
@@ -505,6 +533,7 @@ class Asteroids():
             #self.paused = True
 
     def killShip(self):
+        stopSound("laser")
         stopSound("thrust")
         playSound("explode2")
         self.explodingCount = 0
@@ -515,6 +544,7 @@ class Asteroids():
 
         self.stage.removeSprite(self.ship)
         self.stage.removeSprite(self.ship.thrustJet)
+        self.stage.removeSprite(self.ship.sword)
         self.gameState = 'exploding'
         self.ship.explode()
 
@@ -538,7 +568,10 @@ class Asteroids():
             playSound("extralife")
             self.nextLife += 10000
             self.addLife(self.lives)
-
+    
+    def addToLeaderboard(self, score):
+        self.leaderboard.append(score)
+        self.leaderboard.sort(reverse=True)
 
 # Script to run the game
 if not pygame.font:
@@ -546,8 +579,9 @@ if not pygame.font:
 if not pygame.mixer:
     print('Warning, sound disabled')
 
-# initSoundManager()
-# game = Asteroids()  # create object game from class Asteroids
-# game.playGame()
+#### uncomment to play the game manually with `python3 asteroids.py`
+initSoundManager()
+game = Asteroids()  # create object game from class Asteroids
+game.playGame()
 
 ####

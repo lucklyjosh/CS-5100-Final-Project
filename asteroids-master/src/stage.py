@@ -28,11 +28,13 @@ class Stage:
     def __init__(self, caption, dimensions=None):
         pygame.init()
         self.font = pygame.font.Font(None, 36)
+        self.weapons = ["Shooter", "Laser", "Sword"]
+        self.currentWeapon = self.weapons[0]
 
         # If no screen size is provided pick the first available mode
         if dimensions == None:
             dimensions = pygame.display.list_modes()[0]
-
+            
         self.screen = pygame.display.set_mode(dimensions)
         pygame.display.set_caption(caption)
         pygame.mouse.set_visible(False)
@@ -66,7 +68,7 @@ class Stage:
             if sprite.position.x < 0:
                 sprite.position.x = self.width
 
-            if sprite.position.x >  self.width:
+            if sprite.position.x > self.width:
                 sprite.position.x = 0
 
             if sprite.position.y < 0:
@@ -135,3 +137,10 @@ class Stage:
         scoreText = font2.render(fpsStr, True, (255, 255, 255))
         scoreTextRect = scoreText.get_rect(centerx=(self.width/2), centery=15)
         self.screen.blit(scoreText, scoreTextRect)
+    
+    def displayCurrentWeapon(self, currentWeapon):
+        font2 = pygame.font.Font('../res/Hyperspace.otf', 15)
+        weaponStr = "Current weapon: " + currentWeapon
+        weaponText = font2.render(weaponStr, True, (255, 255, 255))
+        weaponTextRect = weaponText.get_rect(centerx = 125, centery=750)
+        self.screen.blit(weaponText, weaponTextRect)
