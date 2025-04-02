@@ -296,11 +296,11 @@ class Asteroids():
 
     def doSaucerLogic(self):
         if self.saucer is not None:
-            if self.saucer.laps >= 2:
+            if self.saucer.laps >= 3:
                 self.killSaucer()
 
         # Create a saucer
-        if self.secondsCount % 2000 == 0 and self.saucer is None:
+        if self.secondsCount % 1000 == 0 and self.saucer is None:
             randVal = random.randrange(0, 10)
             if randVal <= 3:
                 self.saucer = Saucer(
@@ -441,6 +441,11 @@ class Asteroids():
                 if self.ship.bulletCollision(self.saucer):
                     saucerHit = True
                     self.score += self.saucer.scoreValue
+                    
+                    if self.saucer and self.saucer.saucerType == Saucer.smallSaucerType:
+                        self.add_reward('reward_hit_alien_fast')
+                    else:
+                        self.add_reward('reward_hit_alien_slow')
 
             if self.ship.bulletCollision(rock):
                 rockHit = True
@@ -521,10 +526,6 @@ class Asteroids():
         self.stage.removeSprite(self.saucer)
 
         self.saucer = None
-        if self.saucer and self.saucer.saucerType == Saucer.smallSaucerType:
-            self.add_reward('reward_hit_alien_fast')
-        else:
-            self.add_reward('reward_hit_alien_slow')
 
     def createDebris(self, sprite):
         for _ in range(0, 25):
