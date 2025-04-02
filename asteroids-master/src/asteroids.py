@@ -87,7 +87,7 @@ class Asteroids():
          for sprite in self.rockList]  # clear old rocks
         if self.saucer is not None:
             self.killSaucer()
-        self.startLives = 3
+        self.startLives = 5
         self.createNewShip()
         self.createLivesList()
         self.score = 0
