@@ -69,23 +69,21 @@ class Asteroids():
             'reward_too_close_no_fire': -50,
             'reward_hit_alien_slow': 500,
             'reward_hit_alien_fast': 1000,
-            'reward_hit_large_rock': 50,
-            'reward_hit_medium_rock': 100,
-            'reward_hit_small_rock': 200,
+            'reward_hit_large_rock': 100,
+            'reward_hit_medium_rock': 300,
+            'reward_hit_small_rock': 500,
             'reward_survive_frame': 1,
             'reward_do_nothing': 0,
-            'reward_life_lost': -300,
+            'reward_life_lost': -5000,
             'reward_level_cleared': 500
         }
         self.rocks_hit = 0
         self.levels_completed = 0
-
+        self.numLevels = 3
 
     def add_reward(self, key):
         reward_value = self.reward_context.get(key, 0)
         self.current_reward += reward_value
-
-
 
     def initialiseGame(self):
         self.gameState = 'playing'
@@ -100,7 +98,8 @@ class Asteroids():
         self.rockList: List[Rock] = []
         # Set level 1 
         self.level = 1
-        self.numRocks = 1
+        self.levels_completed = 0
+        self.numRocks = 3
         self.nextLife = 10000
 
         self.createRocks(self.numRocks)
@@ -168,7 +167,6 @@ class Asteroids():
         self.fps = 0.0
         # Main loop
         while True:
-
             # calculate fps
             timePassed += clock.tick(60)
             frameCount += 1
@@ -209,32 +207,32 @@ class Asteroids():
                 self.exploding()
             elif self.gameState == 'win':
                 self.stage.displayWinScreen()
+                done = True
             else:
                 self.stage.displayText()
 
             pygame.display.flip()
 
     def step(self, action):
-        # self.input(action)
+        done = False
 
-        # self.stage.screen.fill((10, 10, 10))
         self.stage.moveSprites()
-        # self.stage.drawSprites()
         self.doSaucerLogic()
         self.stage.displayScore(self.score)
-        # if self.showingFPS:
-        #     self.displayFps()  # for debug
         self.checkScore()
 
-
         # Process keys and game states
+        self.secondsCount += 1
         if self.gameState == 'playing':
             self.agent_playing(action)
             self.add_reward('reward_survive_frame')
         elif self.gameState == 'exploding':
             self.exploding()
+            if self.lives == 0:
+                done = True
         elif self.gameState == 'win':
             self.stage.displayWinScreen()
+            done = True
         else:
             self.stage.displayText()
 
@@ -251,12 +249,12 @@ class Asteroids():
         # Encourage moving closer to rocks for attacks
         if min_distance < 300:
             self.add_reward('reward_close_to_rock')
-            print(f"🟢 Approaching rock, Reward added. Distance: {min_distance:.2f}")
+            # print(f"🟢 Approaching rock, Reward added. Distance: {min_distance:.2f}")
 
         # Penalize agent for reckless movement without shooting
         if min_distance < 50 and action != 'fire':
             self.add_reward('reward_too_close_no_fire')
-            print(f"🔴 Too close without firing! Penalty applied. Distance: {min_distance:.2f}")
+            # print(f"🔴 Too close without firing! Penalty applied. Distance: {min_distance:.2f}")
 
 
         rockState = {}
@@ -278,10 +276,6 @@ class Asteroids():
             }, # the whole Ship object
             'rocks': rockState
         }
-
-        done = False
-        if self.lives == 0 and self.gameState == 'exploding':
-            done = True
 
         reward = self.current_reward
         self.current_reward = 0  # reset reward after each step
@@ -309,11 +303,11 @@ class Asteroids():
 
     def doSaucerLogic(self):
         if self.saucer is not None:
-            if self.saucer.laps >= 2:
+            if self.saucer.laps >= 3:
                 self.killSaucer()
 
         # Create a saucer
-        if self.secondsCount % 2000 == 0 and self.saucer is None:
+        if self.secondsCount % 1000 == 0 and self.saucer is None:
             randVal = random.randrange(0, 10)
             if randVal <= 3:
                 self.saucer = Saucer(
@@ -345,16 +339,11 @@ class Asteroids():
         # Should move the ship controls into the ship class
         self.levels_completed += 1
         print(f"🚀 Level {self.levels_completed} completed! Moving to the next level.")
-        if self.level == 1:
-            self.level = 2
-            self.numRocks = 2
+        if self.level < self.numLevels:
+            self.level += 1
+            self.numRocks += 1
             self.createRocks(self.numRocks)
-        elif self.level == 2:
-            self.level = 3
-            self.numRocks = 3
-            self.createRocks(self.numRocks)
-        elif self.level == 3:
-            # Win after level 3
+        else:
             self.gameState = 'win'
 
     def input(self, events):
@@ -480,6 +469,11 @@ class Asteroids():
                 if self.ship.bulletCollision(self.saucer) or self.ship.laserCollision(self.saucer) or self.ship.swordCollision(self.ship.sword, self.saucer):
                     saucerHit = True
                     self.score += self.saucer.scoreValue
+                    
+                    if self.saucer and self.saucer.saucerType == Saucer.smallSaucerType:
+                        self.add_reward('reward_hit_alien_fast')
+                    else:
+                        self.add_reward('reward_hit_alien_slow')
 
             if self.ship.bulletCollision(rock) or self.ship.laserCollision(rock) or self.ship.swordCollision(self.ship.sword, rock):
                 rockHit = True
@@ -488,7 +482,7 @@ class Asteroids():
                 self.rockList.remove(rock)
                 self.stage.spriteList.remove(rock)
                 self.rocks_hit += 1
-                print(f"💥 Rock destroyed! Total rocks hit: {self.rocks_hit}")
+                # print(f"💥 Rock destroyed! Total rocks hit: {self.rocks_hit}")
 
                 if rock.rockType == Rock.largeRockType:
                     playSound("explode1")
@@ -562,10 +556,6 @@ class Asteroids():
         self.stage.removeSprite(self.saucer)
 
         self.saucer = None
-        if self.saucer and self.saucer.saucerType == Saucer.smallSaucerType:
-            self.add_reward('reward_hit_alien_fast')
-        else:
-            self.add_reward('reward_hit_alien_slow')
 
     def createDebris(self, sprite):
         for _ in range(0, 25):

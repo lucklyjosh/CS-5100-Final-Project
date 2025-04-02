@@ -1,9 +1,12 @@
+import pickle
 import pygame
 import sys
 from soundManager import *
 from asteroids import *
 import random
 import numpy as np
+import pprint
+from datetime import datetime
 
 class Agent():
 
@@ -162,63 +165,105 @@ class Agent():
         return state_hash_str
 
     
-    def play(self):
-        print("🚀 Initializing pygame...")
-        pygame.init()
+    def play(self, epsilon=0.1, debug=False):
+        args = sys.argv[1:]
+        if len(args) > 0:
+            # load a specific q_table file
+            filename = "./q_tables/" + args[0]
+        elif len(args) == 0:
+            # load the most recent q_table
+            filename = "./q_tables/" + self.get_latest_q_table()
+        print(filename)
+        with open(filename, "rb") as f:
+            q_table = pickle.load(f)
+            self.Q_table = q_table
 
-        print("🔊 Initializing sound manager...")
+        if debug:
+            print("🚀 Initializing pygame...")
+            pygame.init()
+
+        if debug:
+            print("🔊 Initializing sound manager...")
         initSoundManager()
 
-        print("🎮 Initializing game...")
+        if debug:
+            print("🎮 Initializing game...")
         self.game.initialiseGame()
 
         actions = ['up', 'left', 'right', 'fire']
+        num_actions = len(actions)
+        action = actions[0] # default first action to fire
         clock = pygame.time.Clock()
 
-        print("🖥️ Checking screen surface...")
-        if not self.game.stage.screen:
-            print("Screen surface is None!")
-        else:
-            print("Screen initialized:", self.game.stage.screen.get_size())
-            print("Display driver:", pygame.display.get_driver())
+        if debug:
+            print("🖥️ Checking screen surface...")
+            if not self.game.stage.screen:
+                print("Screen surface is None!")
+            else:
+                print("Screen initialized:", self.game.stage.screen.get_size())
+                print("Display driver:", pygame.display.get_driver())
 
-        running = True
+        done = False
         frame_count = 0
-        while running:
-            
+        while not done:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    running = False
-
-            action = random.choice(actions)
+                    done = True
             obs, reward, done = self.game.step(action)
             state_hash = self.hash(obs)
-            print("🔑 State Hash:", state_hash)
+            if debug:
+                print("🔑 State Hash:", state_hash)
+
+            # select action for next round based off of current state
+            if state_hash in self.Q_table:
+                action_idx = np.argmax(self.Q_table[state_hash])
+            else:
+                # if for some reason we've never gotten to state_hash in training, then pick a random action.
+                action_idx = random.randint(0, len(actions)-1)
+
+            if np.random.rand() < epsilon:
+                action_idx = random.randint(0, num_actions - 1)  # Explore: Random action
+            else:
+                # Chase and shoot rock logic
+                if '1' in state_hash[0]:  # Rock danger detected
+                    action_idx = random.choice([1, 2, 0])  # Left, Right, or Up
+                elif state_hash[1] == '1' and state_hash[2] in ['1', '2']:  # Rock in view and close
+                    action_idx = 3  # Fire
+                elif state_hash[1] == '1':  # Rock in view but not close
+                    action_idx = random.choice([1, 2])  # Left or Right to adjust aim
+                elif state_hash[2] == '1':  # Rock mid-range, chase it
+                    action_idx = 0  # Thrust (up)
+                else:
+                    action_idx = np.argmax(self.Q_table[state_hash])
+            
+            action = actions[action_idx]
+
+            if debug:
+                print("Action:", action)
 
             # Render the game state
-            print("🔄 Rendering frame...")
+            if debug:
+                print("🔄 Rendering frame...")
             self.game.stage.screen.fill((10, 10, 10))
             self.game.stage.moveSprites()
             self.game.stage.drawSprites()
             self.game.stage.displayScore(game.score)
             pygame.display.flip()
-            print("✅ Frame rendered.")
+            if debug:
+                print("✅ Frame rendered.")
 
-            print(f"Frame {frame_count}: {action}")
-            print("Ship:", obs['ship']['position'].x, obs['ship']['position'].y)
-            print("Rock:", obs['rocks'][0]['position'].x, obs['rocks'][0]['position'].y)
-            print("--------------")
+                print(f"Frame {frame_count}: {action}")
+                print("Ship:", obs['ship']['position'].x, obs['ship']['position'].y)
+                print("Rock:", obs['rocks'][0]['position'].x, obs['rocks'][0]['position'].y)
+                print("--------------")
 
             frame_count += 1
-            clock.tick(60)
-
-            if done or frame_count > 3000:
-                running = False
+            clock.tick(30)
 
         pygame.quit()
         print("🛑 Game session ended.")
 
-    def q_learning(self, num_episodes=10000, gamma=0.95, epsilon=1, decay_rate=0.999, history_range=100, GUI=False):
+    def q_learning(self, num_episodes=10000, gamma=0.95, epsilon=1, decay_rate=0.999, history_range=30, GUI=False):
         if GUI==True:
             print("🚀 Initializing pygame...")
             pygame.init()
@@ -234,18 +279,17 @@ class Agent():
         hist = []
 
         for i in range(num_episodes):
+            epsilon = 1 # reset epsilon a the start at each episode. reintroduce variety every game.
             obs, reward, done = self.game.initialiseGame()
         
-            for j in range(history_range):
-                rand_action = random.choice(actions)
-                obs, reward, done = self.game.step(rand_action)
-                print(f"Action: {rand_action}, Reward: {reward}")
+            if i == 0:
+                for j in range(history_range):
+                    rand_action = random.choice(actions)
+                    obs, reward, done = self.game.step(rand_action)
+                    hist.append([self.hash(obs), reward, actions.index(rand_action)])
 
-                # reward = random.randint(-100, 100)
-                hist.append([self.hash(obs), reward, actions.index(rand_action)])
-
-            # init subsequent rewards into the first loop
-            subsequent_rewards = sum(map(lambda arr: arr[1], hist[:-1]))
+                # init subsequent rewards into the first loop
+                subsequent_rewards = sum(map(lambda arr: arr[1], hist[:-1]))
 
             while not done:
                 for event in pygame.event.get():
@@ -264,6 +308,7 @@ class Agent():
                 # update subsequent_rewards
                 subsequent_rewards -= snapshot[1]
                 subsequent_rewards += hist[-1][1]
+
                 self.Q_table[hash][first_action_idx] = (1 - eta) * self.Q_table[hash][first_action_idx] + eta * subsequent_rewards
                 self.update_table[hash][first_action_idx] += 1
 
@@ -286,9 +331,13 @@ class Agent():
 
 
                 obs, reward, done = self.game.step(actions[next_action])
-                print(f"Next Action: {actions[next_action]}, Reward: {reward}")
+                # print(f"Next Action: {actions[next_action]}, Reward: {reward}")
                 # reward = random.randint(-100, 100)
                 new_hash = self.hash(obs)
+                if new_hash[1] == '1':
+                    reward += 10 # reward aiming at a rock
+                if new_hash[4] == '1':
+                    reward += 10 # reward aiming at alien
                 hist.append([new_hash, reward, next_action])
 
                 epsilon *= decay_rate
@@ -302,22 +351,35 @@ class Agent():
                     self.game.stage.displayScore(game.score)
                     pygame.display.flip()
 
-                    # print(f"Frame {frame_count}: {next_action}")
-                    # print("--------------")
-
                     frame_count += 1
-                    clock.tick(30)
-
-                    if frame_count > 5000:
-                        done = True
-                        print(self.Q_table)
-                        print(self.update_table)
+                    clock.tick(60)
+            print("---------------------------------")
+            print(f'episode {i} completed at {datetime.now()} with the following q_table:')
+            pprint.pprint(self.Q_table)
 
         pygame.quit()
         print("🛑 Game session ended.")
 
+        # save q table so we can use it
+        now = datetime.now()
+        formatted_date_time = now.strftime("%Y-%m-%d-%H:%M:%S") 
+        filename = f'./q_tables/q_table_{formatted_date_time}.pickle'
+        with open(filename, "wb") as f:
+            pickle.dump(self.Q_table, f)
+
+
+    def get_latest_q_table(self):
+        try:
+            contents = os.listdir("./q_tables")
+            contents.sort(reverse=True)
+            return contents[0]
+        except Exception as e:
+            return f"Error: {e}"
+
 if __name__ == "__main__":
     game = Asteroids()
     agent = Agent(game)
-    agent.q_learning(num_episodes = 1, GUI=True)
-    # agent.play()
+    # uncomment to train:
+    # agent.q_learning(num_episodes = 1000, GUI=True)
+    # uncomment to play with trained model:
+    agent.play()
