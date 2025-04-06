@@ -40,8 +40,6 @@ class Agent():
         rocks = state['rocks']
         currentWeapon = state['ship']['currentWeapon']
 
-        state_hash_str = currentWeapon
-
         # Normalize ship heading
         ship_heading_mag = math.sqrt(ship_heading.x ** 2 + ship_heading.y ** 2)
         ship_heading_norm = Vector2d(
@@ -72,6 +70,7 @@ class Agent():
 
         state_hash_str += str(rock_danger)
         state_hash_str += str(rock_in_view)
+        state_hash_str = currentWeapon
 
         if debug:
             print("Rock danger ahead:", rock_danger)
@@ -327,7 +326,7 @@ class Agent():
                     elif hash[1] == '1':  # Rock in view but not close
                         next_action = random.choice([1, 2, 4])  # Left or Right to adjust aim or change weapon
                     elif hash[2] == '1':  # Rock mid-range, chase it
-                        next_action = random.choice(0, 4)  # Thrust (up) or change weapon
+                        next_action = random.choice([0, 4])  # Thrust (up) or change weapon
                     else:
                         next_action = np.argmax(self.Q_table[hash])
 
@@ -382,6 +381,6 @@ if __name__ == "__main__":
     game = Asteroids()
     agent = Agent(game)
     # uncomment to train:
-    agent.q_learning(num_episodes = 1000, GUI=True)
+    # agent.q_learning(num_episodes = 1000, GUI=True)
     # uncomment to play with trained model:
-    # agent.play()
+    agent.play()
