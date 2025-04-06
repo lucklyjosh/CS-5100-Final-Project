@@ -273,8 +273,9 @@ class Asteroids():
             'ship': {
                 'position': self.ship.getPos(), # Vector(x,y)
                 'heading': self.ship.getHeading(), # Vector(x,y)
+                'currentWeapon': self.currentWeapon
             }, # the whole Ship object
-            'rocks': rockState
+            'rocks': rockState,
         }
 
         reward = self.current_reward
@@ -345,6 +346,22 @@ class Asteroids():
             self.createRocks(self.numRocks)
         else:
             self.gameState = 'win'
+    
+    def changeWeapon(self):
+        if self.currentWeapon == self.weapons[0]:
+            self.currentWeapon = self.weapons[1]
+        elif self.currentWeapon == self.weapons[1]:
+            self.currentWeapon = self.weapons[2]
+            self.ship.useSword(True)
+        else:
+            self.ship.useSword(False)
+            self.currentWeapon = self.weapons[0]
+
+    def fireWeapon(self):
+        if self.currentWeapon == "Shooter":
+            self.ship.fireBullet()
+        elif self.currentWeapon == "Laser":
+            self.ship.fireLaser()
 
     def input(self, events):
         self.frameAdvance = False
@@ -356,26 +373,13 @@ class Asteroids():
                     sys.exit(0)
                 if self.gameState == 'playing':
                     if event.key == K_SPACE:
-                        if self.currentWeapon == "Shooter":
-                            self.ship.fireBullet()
-                        elif self.currentWeapon == "Laser":
-                            self.ship.fireLaser()    
+                        self.fireWeapon()  
                     elif event.key == K_b:
-                        if self.currentWeapon == "Shooter":
-                            self.ship.fireBullet()
-                        elif self.currentWeapon == "Laser":
-                            self.ship.fireLaser()   
+                        self.fireWeapon()
                     elif event.key == K_h:
                         self.ship.enterHyperSpace()
                     elif event.key == K_w:
-                        if self.currentWeapon == self.weapons[0]:
-                            self.currentWeapon = self.weapons[1]
-                        elif self.currentWeapon == self.weapons[1]:
-                            self.currentWeapon = self.weapons[2]
-                            self.ship.useSword(True)
-                        else:
-                            self.ship.useSword(False)
-                            self.currentWeapon = self.weapons[0]
+                        self.changeWeapon()
                 elif self.gameState == 'attract_mode':
                     # Start a new game
                     if event.key == K_RETURN:
@@ -417,9 +421,12 @@ class Asteroids():
             self.ship.thrustJet.accelerating = False
 
         if action == 'fire':
-            self.ship.fireBullet()
+            self.fireWeapon()
         if action == 'hyperspace':
             self.ship.enterHyperSpace()
+        if action == 'changeWeapon':
+            self.changeWeapon()
+
 
     def processKeys(self):
         key = pygame.key.get_pressed()
@@ -580,8 +587,8 @@ if not pygame.mixer:
     print('Warning, sound disabled')
 
 #### uncomment to play the game manually with `python3 asteroids.py`
-initSoundManager()
-game = Asteroids()  # create object game from class Asteroids
-game.playGame()
+# initSoundManager()
+# game = Asteroids()  # create object game from class Asteroids
+# game.playGame()
 
 ####

@@ -38,8 +38,9 @@ class Agent():
         ship_heading = state['ship']['heading']
         alien_pos = state['alien']
         rocks = state['rocks']
+        currentWeapon = state['ship']['currentWeapon']
 
-        state_hash_str = ""
+        state_hash_str = currentWeapon
 
         # Normalize ship heading
         ship_heading_mag = math.sqrt(ship_heading.x ** 2 + ship_heading.y ** 2)
@@ -190,7 +191,7 @@ class Agent():
             print("🎮 Initializing game...")
         self.game.initialiseGame()
 
-        actions = ['up', 'left', 'right', 'fire']
+        actions = ['up', 'left', 'right', 'fire', 'changeWeapon']
         num_actions = len(actions)
         action = actions[0] # default first action to fire
         clock = pygame.time.Clock()
@@ -230,7 +231,7 @@ class Agent():
                 elif state_hash[1] == '1' and state_hash[2] in ['1', '2']:  # Rock in view and close
                     action_idx = 3  # Fire
                 elif state_hash[1] == '1':  # Rock in view but not close
-                    action_idx = random.choice([1, 2])  # Left or Right to adjust aim
+                    action_idx = random.choice([1, 2, 4])  # Left or Right to adjust aim
                 elif state_hash[2] == '1':  # Rock mid-range, chase it
                     action_idx = 0  # Thrust (up)
                 else:
@@ -255,6 +256,7 @@ class Agent():
                 print(f"Frame {frame_count}: {action}")
                 print("Ship:", obs['ship']['position'].x, obs['ship']['position'].y)
                 print("Rock:", obs['rocks'][0]['position'].x, obs['rocks'][0]['position'].y)
+                print("Current Weapon:", obs['ship']['currentWeapon'])
                 print("--------------")
 
             frame_count += 1
@@ -274,7 +276,7 @@ class Agent():
             clock = pygame.time.Clock()
             frame_count = 0
 
-        actions = ['up', 'left', 'right', 'fire']
+        actions = ['up', 'left', 'right', 'fire', 'changeWeapon']
         num_actions = len(actions)
         hist = []
 
@@ -323,9 +325,9 @@ class Agent():
                     elif hash[1] == '1' and hash[2] in ['1', '2']:  # Rock in view and close
                         next_action = 3  # Fire
                     elif hash[1] == '1':  # Rock in view but not close
-                        next_action = random.choice([1, 2])  # Left or Right to adjust aim
+                        next_action = random.choice([1, 2, 4])  # Left or Right to adjust aim or change weapon
                     elif hash[2] == '1':  # Rock mid-range, chase it
-                        next_action = 0  # Thrust (up)
+                        next_action = random.choice(0, 4)  # Thrust (up) or change weapon
                     else:
                         next_action = np.argmax(self.Q_table[hash])
 
@@ -380,6 +382,6 @@ if __name__ == "__main__":
     game = Asteroids()
     agent = Agent(game)
     # uncomment to train:
-    # agent.q_learning(num_episodes = 1000, GUI=True)
+    agent.q_learning(num_episodes = 1000, GUI=True)
     # uncomment to play with trained model:
-    agent.play()
+    # agent.play()
