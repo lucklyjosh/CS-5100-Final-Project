@@ -71,7 +71,7 @@ class Asteroids():
             'reward_hit_large_rock': 100,
             'reward_hit_medium_rock': 300,
             'reward_hit_small_rock': 500,
-            'reward_survive_frame': 1,
+            # 'reward_survive_frame': 1,
             'reward_do_nothing': 0,
             'reward_life_lost': -5000,
             'reward_level_cleared': 500
@@ -178,9 +178,9 @@ class Asteroids():
                 frameCount = 0
 
             self.secondsCount += 1
-            if self.gameState == 'playing':
-                print("Calling add_reward for staying alive.")
-                self.add_reward('reward_survive_frame')
+            # if self.gameState == 'playing':
+            #     print("Calling add_reward for staying alive.")
+            #     self.add_reward('reward_survive_frame')
 
 
             self.input(pygame.event.get())
