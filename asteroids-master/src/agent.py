@@ -39,6 +39,7 @@ class Agent():
         alien_pos = state['alien']
         rocks = state['rocks']
         currentWeapon = state['ship']['currentWeapon']
+        state_hash_str = ""
 
         # Normalize ship heading
         ship_heading_mag = math.sqrt(ship_heading.x ** 2 + ship_heading.y ** 2)
@@ -70,7 +71,7 @@ class Agent():
 
         state_hash_str += str(rock_danger)
         state_hash_str += str(rock_in_view)
-        state_hash_str = currentWeapon
+        state_hash_str += currentWeapon
 
         if debug:
             print("Rock danger ahead:", rock_danger)
@@ -278,6 +279,7 @@ class Agent():
         actions = ['up', 'left', 'right', 'fire', 'changeWeapon']
         num_actions = len(actions)
         hist = []
+        quit = False
 
         for i in range(num_episodes):
             epsilon = 1 # reset epsilon a the start at each episode. reintroduce variety every game.
@@ -296,6 +298,9 @@ class Agent():
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         done = True
+                        quit = True
+                if quit == True:
+                    break
 
                 snapshot = hist.pop(0)
                 hash = snapshot[0]
@@ -353,7 +358,10 @@ class Agent():
                     pygame.display.flip()
 
                     frame_count += 1
-                    clock.tick(60)
+                    # clock.tick(60)
+            if quit:
+                print ("Quitting game early")
+                break
             print("---------------------------------")
             print(f'episode {i} completed at {datetime.now()} with the following q_table:')
             pprint.pprint(self.Q_table)
@@ -381,6 +389,6 @@ if __name__ == "__main__":
     game = Asteroids()
     agent = Agent(game)
     # uncomment to train:
-    # agent.q_learning(num_episodes = 1000, GUI=True)
+    agent.q_learning(num_episodes = 1000, GUI=True)
     # uncomment to play with trained model:
-    agent.play()
+    # agent.play()
