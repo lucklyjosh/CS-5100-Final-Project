@@ -43,7 +43,6 @@ from soundManager import *
 
 
 class Asteroids():
-
     explodingTtl = 180
     leaderboard = []
 
@@ -84,6 +83,7 @@ class Asteroids():
     def add_reward(self, key):
         reward_value = self.reward_context.get(key, 0)
         self.current_reward += reward_value
+        print(f"[DEBUG] Reward added: {key} (value: {reward_value}). Current total: {self.current_reward}")
 
     def initialiseGame(self):
         self.gameState = 'playing'
@@ -96,7 +96,7 @@ class Asteroids():
         self.createLivesList()
         self.score = 0
         self.rockList: List[Rock] = []
-        # Set level 1 
+        # Set level 1
         self.level = 1
         self.levels_completed = 0
         self.numRocks = 3
@@ -108,16 +108,16 @@ class Asteroids():
         rockState = {}
         for index, rock in enumerate(self.rockList):
             rockState[index] = {
-                'position': rock.getPos(), # Vector(x,y)
-                'heading': rock.getHeading() # Vector(x,y)
+                'position': rock.getPos(),  # Vector(x,y)
+                'heading': rock.getHeading()  # Vector(x,y)
             }
 
         self.current_state = {
-            'alien': None, # None or Vector(x,y)
+            'alien': None,  # None or Vector(x,y)
             'ship': {
-                'position': self.ship.getPos(), # Vector(x,y)
-                'heading': self.ship.getHeading(), # Vector(x,y)
-            }, # the whole Ship object
+                'position': self.ship.getPos(),  # Vector(x,y)
+                'heading': self.ship.getHeading(),  # Vector(x,y)
+            },  # the whole Ship object
             'rocks': rockState
         }
 
@@ -145,7 +145,7 @@ class Asteroids():
         ship = Ship(self.stage)
         self.stage.addSprite(ship)
         ship.position.x = self.stage.width - \
-            (lifeNumber * ship.boundingRect.width) - 10
+                          (lifeNumber * ship.boundingRect.width) - 10
         ship.position.y = 0 + ship.boundingRect.height
         self.livesList.append(ship)
 
@@ -256,12 +256,11 @@ class Asteroids():
             self.add_reward('reward_too_close_no_fire')
             # print(f"🔴 Too close without firing! Penalty applied. Distance: {min_distance:.2f}")
 
-
         rockState = {}
         for index, rock in enumerate(self.rockList):
             rockState[index] = {
-                'position': rock.getPos(), # Vector(x,y)
-                'heading': rock.getHeading() # Vector(x,y)
+                'position': rock.getPos(),  # Vector(x,y)
+                'heading': rock.getHeading()  # Vector(x,y)
             }
 
         alienState = None
@@ -269,17 +268,17 @@ class Asteroids():
             alienState = self.saucer.getPos()
 
         self.current_state = {
-            'alien': alienState, # None or Vector(x,y)
+            'alien': alienState,  # None or Vector(x,y)
             'ship': {
-                'position': self.ship.getPos(), # Vector(x,y)
-                'heading': self.ship.getHeading(), # Vector(x,y)
-            }, # the whole Ship object
+                'position': self.ship.getPos(),  # Vector(x,y)
+                'heading': self.ship.getHeading(),  # Vector(x,y)
+            },  # the whole Ship object
             'rocks': rockState
         }
 
         reward = self.current_reward
         self.current_reward = 0  # reset reward after each step
-        
+
         return self.current_state, reward, done
 
     def agent_playing(self, action):
@@ -359,12 +358,12 @@ class Asteroids():
                         if self.currentWeapon == "Shooter":
                             self.ship.fireBullet()
                         elif self.currentWeapon == "Laser":
-                            self.ship.fireLaser()    
+                            self.ship.fireLaser()
                     elif event.key == K_b:
                         if self.currentWeapon == "Shooter":
                             self.ship.fireBullet()
                         elif self.currentWeapon == "Laser":
-                            self.ship.fireLaser()   
+                            self.ship.fireLaser()
                     elif event.key == K_h:
                         self.ship.enterHyperSpace()
                     elif event.key == K_w:
@@ -397,7 +396,7 @@ class Asteroids():
                     pygame.display.toggle_fullscreen()
 
                 # if event.key == K_k:
-                    # self.killShip()
+                # self.killShip()
             elif event.type == KEYUP:
                 if event.key == K_o:
                     self.frameAdvance = True
@@ -440,6 +439,7 @@ class Asteroids():
             pressed = True
         if not pressed and self.gameState == 'playing':
             self.add_reward('reward_do_nothing')
+
     # Check for ship hitting the rocks etc.
 
     def checkCollisions(self):
@@ -449,9 +449,11 @@ class Asteroids():
         shipHit, saucerHit = False, False
 
         # Rocks
-        for rock in self.rockList:
+        for rock in self.rockList[:]:
             rockHit = False
+            bullet_hit = False  # flag to indicate if the rock was hit by a bullet
 
+            # Check ship collision with rock (this collision doesn't give a reward)
             if not self.ship.inHyperSpace and rock.collidesWith(self.ship):
                 p = rock.checkPolygonCollision(self.ship)
                 if p is not None:
@@ -466,39 +468,45 @@ class Asteroids():
                 if self.saucer.bulletCollision(rock):
                     rockHit = True
 
-                if self.ship.bulletCollision(self.saucer) or self.ship.laserCollision(self.saucer) or self.ship.swordCollision(self.ship.sword, self.saucer):
+                if self.ship.bulletCollision(self.saucer) or self.ship.laserCollision(
+                        self.saucer) or self.ship.swordCollision(self.ship.sword, self.saucer):
                     saucerHit = True
                     self.score += self.saucer.scoreValue
-                    
                     if self.saucer and self.saucer.saucerType == Saucer.smallSaucerType:
                         self.add_reward('reward_hit_alien_fast')
                     else:
                         self.add_reward('reward_hit_alien_slow')
 
-            if self.ship.bulletCollision(rock) or self.ship.laserCollision(rock) or self.ship.swordCollision(self.ship.sword, rock):
+            # Check weapon collisions:
+            # Only if the rock is hit by a bullet do we want to reward it.
+            if self.ship.bulletCollision(rock) or self.ship.laserCollision(rock) or self.ship.swordCollision(
+                    self.ship.sword, rock):
                 rockHit = True
+                bullet_hit = True
 
             if rockHit:
                 self.rockList.remove(rock)
                 self.stage.spriteList.remove(rock)
                 self.rocks_hit += 1
-                # print(f"💥 Rock destroyed! Total rocks hit: {self.rocks_hit}")
 
                 if rock.rockType == Rock.largeRockType:
                     playSound("explode1")
                     newRockType = Rock.mediumRockType
                     self.score += 50
-                    if self.gameState == 'playing':
+                    if self.gameState == 'playing' and bullet_hit:
                         self.add_reward('reward_hit_large_rock')
                 elif rock.rockType == Rock.mediumRockType:
                     playSound("explode2")
                     newRockType = Rock.smallRockType
                     self.score += 100
-                    if self.gameState == 'playing':
+                    if self.gameState == 'playing' and bullet_hit:
                         self.add_reward('reward_hit_medium_rock')
                 else:
                     playSound("explode3")
                     self.score += 200
+                    if self.gameState == 'playing' and bullet_hit:
+                        # Optionally add a reward for small rocks if desired
+                        self.add_reward('reward_hit_small_rock')
 
                 if rock.rockType != Rock.smallRockType:
                     # new rocks
@@ -510,8 +518,7 @@ class Asteroids():
 
                 self.createDebris(rock)
 
-
-        # Saucer bullets
+        # Saucer bullets and collisions with the ship
         if self.saucer is not None:
             if not self.ship.inHyperSpace:
                 if self.saucer.bulletCollision(self.ship):
@@ -521,7 +528,6 @@ class Asteroids():
                     shipHit = True
                     saucerHit = True
 
-
             if saucerHit:
                 self.createDebris(self.saucer)
                 self.killSaucer()
@@ -529,8 +535,6 @@ class Asteroids():
         if shipHit:
             self.killShip()
             self.add_reward('reward_life_lost')
-            # comment in to pause on collision
-            #self.paused = True
 
     def killShip(self):
         stopSound("laser")
@@ -568,7 +572,7 @@ class Asteroids():
             playSound("extralife")
             self.nextLife += 10000
             self.addLife(self.lives)
-    
+
     def addToLeaderboard(self, score):
         self.leaderboard.append(score)
         self.leaderboard.sort(reverse=True)
