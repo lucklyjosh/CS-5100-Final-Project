@@ -389,6 +389,6 @@ if __name__ == "__main__":
     game = Asteroids()
     agent = Agent(game)
     # uncomment to train:
-    agent.q_learning(num_episodes = 1000, GUI=True)
+    # agent.q_learning(num_episodes = 1000, GUI=True)
     # uncomment to play with trained model:
-    # agent.play()
+    agent.play()

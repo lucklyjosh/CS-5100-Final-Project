@@ -231,7 +231,7 @@ class Asteroids():
             if self.lives == 0:
                 done = True
         elif self.gameState == 'win':
-            self.stage.displayWinScreen()
+            #self.stage.displayWinScreen()
             done = True
         else:
             self.stage.displayText()
