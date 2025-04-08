@@ -338,6 +338,8 @@ class Agent():
                     reward += 10 # reward aiming at a rock
                 if new_hash[4] == '1':
                     reward += 10 # reward aiming at alien
+                if reward == 0:
+                    reward -= 20  # penalty for failing to get points
                 hist.append([new_hash, reward, next_action])
 
                 epsilon *= decay_rate
@@ -380,6 +382,6 @@ if __name__ == "__main__":
     game = Asteroids()
     agent = Agent(game)
     # uncomment to train:
-    # agent.q_learning(num_episodes = 1000, GUI=True)
+    agent.q_learning(num_episodes = 10, GUI=True)
     # uncomment to play with trained model:
-    agent.play()
+    # agent.play()
