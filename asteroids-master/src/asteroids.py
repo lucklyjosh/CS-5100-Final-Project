@@ -225,7 +225,7 @@ class Asteroids():
         self.secondsCount += 1
         if self.gameState == 'playing':
             self.agent_playing(action)
-            self.add_reward('reward_survive_frame')
+            # self.add_reward('reward_survive_frame')
         elif self.gameState == 'exploding':
             self.exploding()
             if self.lives == 0:
@@ -582,10 +582,10 @@ if not pygame.font:
     print('Warning, fonts disabled')
 if not pygame.mixer:
     print('Warning, sound disabled')
-
-#### uncomment to play the game manually with `python3 asteroids.py`
-initSoundManager()
-game = Asteroids()  # create object game from class Asteroids
-game.playGame()
+#
+# #### uncomment to play the game manually with `python3 asteroids.py`
+# initSoundManager()
+# game = Asteroids()  # create object game from class Asteroids
+# game.playGame()
 
 ####
