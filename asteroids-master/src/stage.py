@@ -25,9 +25,11 @@ from pygame.locals import *
 class Stage:
 
     # Set up the PyGame surface
-    def __init__(self, caption, dimensions=None):
+    def __init__(self, caption, dimensions=None, training=False):
         pygame.init()
         self.font = pygame.font.Font(None, 36)
+        self.training = training
+        print("✅ Stage initialized. Display size:", dimensions)
 
         # If no screen size is provided pick the first available mode
         if dimensions == None:
@@ -96,6 +98,8 @@ class Stage:
         self.screen.blit(instructionText, instructionTextRect)
 
     def displayWinScreen(self):
+        if self.training:
+            return 
         # Display victory
         font = pygame.font.Font('../res/Hyperspace.otf', 50)
         winText = font.render("You WIN!!!", True, (255, 255, 0))

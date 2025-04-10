@@ -23,9 +23,11 @@ import random
 from pygame.locals import *
 
 sounds = {}  # create empty dictionary of sounds
-
+SOUND_ENABLED = True
 
 def initSoundManager():
+    if not SOUND_ENABLED:
+        return 
     pygame.mixer.init()
     sounds["fire"] = pygame.mixer.Sound("../res/FIRE.WAV")
     sounds["explode1"] = pygame.mixer.Sound("../res/EXPLODE1.WAV")
@@ -38,13 +40,28 @@ def initSoundManager():
     sounds["extralife"] = pygame.mixer.Sound("../res/LIFE.WAV")
 
 
-def playSound(soundName):
-    channel = sounds[soundName].play()
+# def playSound(soundName):
+#     channel = sounds[soundName].play()
 
+
+# def playSoundContinuous(soundName):
+#     channel = sounds[soundName].play(-1)
+
+
+# def stopSound(soundName):
+#     channel = sounds[soundName].stop()
+
+def playSound(soundName):
+    if not SOUND_ENABLED or soundName not in sounds:
+        return
+    sounds[soundName].play()
 
 def playSoundContinuous(soundName):
-    channel = sounds[soundName].play(-1)
-
+    if not SOUND_ENABLED or soundName not in sounds:
+        return
+    sounds[soundName].play(-1)
 
 def stopSound(soundName):
-    channel = sounds[soundName].stop()
+    if not SOUND_ENABLED or soundName not in sounds:
+        return
+    sounds[soundName].stop()

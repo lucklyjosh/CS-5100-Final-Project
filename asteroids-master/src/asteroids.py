@@ -46,8 +46,11 @@ class Asteroids():
 
     explodingTtl = 180
 
-    def __init__(self):
-        self.stage = Stage('Atari Asteroids', (1024, 768))
+    def __init__(self, training=False):
+        # uncommand for training
+        self.stage = Stage('Atari Asteroids', (1024, 768), training=training)
+        
+        # self.stage = Stage('Atari Asteroids', (1024, 768))
         self.paused = False
         self.showingFPS = False
         self.frameAdvance = False
@@ -105,7 +108,8 @@ class Asteroids():
         for index, rock in enumerate(self.rockList):
             rockState[index] = {
                 'position': rock.getPos(), # Vector(x,y)
-                'heading': rock.getHeading() # Vector(x,y)
+                'heading': rock.getHeading(), # Vector(x,y)
+                'type': rock.rockType
             }
 
         self.current_state = {
