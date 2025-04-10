@@ -130,8 +130,9 @@ class Asteroids():
              for debris in self.ship.shipDebrisList]
         self.ship = Ship(self.stage)
         self.stage.addSprite(self.ship.thrustJet)
-        self.stage.addSprite(self.ship)
         self.stage.addSprite(self.ship.sword)
+        self.stage.addSprite(self.ship)
+        
 
     def createLivesList(self):
         self.lives += 1
