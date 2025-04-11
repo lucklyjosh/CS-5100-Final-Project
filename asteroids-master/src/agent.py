@@ -1,3 +1,4 @@
+
 import pickle
 import pygame
 import sys
@@ -183,15 +184,16 @@ class Agent():
     
     def play(self, epsilon=0.1, debug=True):
 
-        args = sys.argv[1:]
-        if len(args) > 0:
-            filename = "./q_tables/" + args[0]
-            print(f"📂 Using Q-table from command-line argument: {filename}")
-        else:
-            filename = "./q_tables/" + self.get_latest_q_table()
-            print(f"📂 No Q-table specified. Using latest file: {filename}")
+        # args = sys.argv[1:]
+        # if len(args) > 0:
+        #     filename = "./q_tables/" + args[0]
+        #     print(f"📂 Using Q-table from command-line argument: {filename}")
+        # else:
+        #     filename = "./q_tables/" + self.get_latest_q_table()
+        #     print(f"📂 No Q-table specified. Using latest file: {filename}")
 
-
+        filename = "./q_tables/q_table_ep2999_2025-04-10-18-24-31.pickle"
+        print(f"📂 Manually using Q-table: {filename}")
         print(filename)
         with open(filename, "rb") as f:
             q_table = pickle.load(f)
@@ -231,6 +233,9 @@ class Agent():
             obs, reward, done = self.game.step(action)
             state_hash = self.hash(obs)
 
+            # Continue after win a game
+            # if self.game.stage.gameState == 'win':
+            #     done = True
             # select action for next round based off of current state
             if state_hash in self.Q_table:
                 action_idx = np.argmax(self.Q_table[state_hash])
@@ -270,12 +275,12 @@ class Agent():
             #     print("--------------")
 
             frame_count += 1
-            clock.tick(30)
+            clock.tick(60)
 
         pygame.quit()
         print("🛑 Game session ended.")
 
-    def q_learning(self, num_episodes=10000, gamma=0.95, epsilon=1, decay_rate=0.999, history_range=30, GUI=True):
+    def q_learning(self, num_episodes=10000, gamma=0.95, epsilon=1, decay_rate=0.999, history_range=30, GUI=True, start_episode=0):
         if GUI:
             print("🚀 Initializing pygame...")
             pygame.init()
@@ -288,16 +293,19 @@ class Agent():
 
         actions = ['up', 'left', 'right', 'fire']
         num_actions = len(actions)
-        # hist = []
 
-        for i in range(num_episodes):
+        # uncomment it after training
+        hist = []
+
+        for i in range(start_episode, num_episodes):
+        # for i in range(num_episodes):
             epsilon = 1 # reset epsilon a the start at each episode. reintroduce variety every game.
             obs, reward, done = self.game.initialiseGame()
 
             
-        
-            if i == 0:
-                hist = []
+            if i == start_episode:
+            # if i == 0:
+            #     hist = []
                 for j in range(history_range):
                     rand_action = random.choice(actions)
                     obs, reward, done = self.game.step(rand_action)
@@ -315,11 +323,17 @@ class Agent():
                 hash = snapshot[0]
                 first_action_idx = snapshot[2]
 
+                # if hash not in self.Q_table:
+                #     self.Q_table[hash] = np.zeros(num_actions)
+                #     self.update_table[hash] = np.zeros(num_actions)
                 if hash not in self.Q_table:
                     self.Q_table[hash] = np.zeros(num_actions)
+
+                if hash not in self.update_table:
                     self.update_table[hash] = np.zeros(num_actions)
 
                 eta = 1 / (1 + self.update_table[hash][first_action_idx])
+
                 # update subsequent_rewards
                 subsequent_rewards -= snapshot[1]
                 subsequent_rewards += hist[-1][1]
@@ -368,7 +382,7 @@ class Agent():
                     pygame.display.flip()
 
                     frame_count += 1
-                    clock.tick(60)
+                    # clock.tick(60)
             
             if i % 100 == 0 or i == num_episodes - 1:
                 now = datetime.now()
@@ -403,7 +417,7 @@ class Agent():
 
 if __name__ == "__main__":
     # game = Asteroids()
-    game = Asteroids(training=False)
+    game = Asteroids()
     agent = Agent(game)
 
     # import soundManager
@@ -412,5 +426,10 @@ if __name__ == "__main__":
     # uncomment to train:
     # agent.q_learning(num_episodes = 1000, GUI=False)
 
+    with open('./q_tables/q_table_ep2999_2025-04-10-18-24-31.pickle', 'rb') as f:
+        agent.Q_table = pickle.load(f)
+
+    agent.q_learning(num_episodes=5000, GUI=True, start_episode=3000)
+
     # uncomment to play with trained model:
-    agent.play()
+    # agent.play()
