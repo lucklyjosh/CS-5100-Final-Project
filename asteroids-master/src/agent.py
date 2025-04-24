@@ -38,7 +38,7 @@ class Agent():
         ship_heading = state['ship']['heading']
         alien_pos = state['alien']
         rocks = state['rocks']
-
+        currentWeapon = state['ship']['currentWeapon']
         state_hash_str = ""
 
         # Normalize ship heading
@@ -71,6 +71,7 @@ class Agent():
 
         state_hash_str += str(rock_danger)
         state_hash_str += str(rock_in_view)
+        state_hash_str += currentWeapon
 
         if debug:
             print("Rock danger ahead:", rock_danger)
@@ -190,7 +191,7 @@ class Agent():
             print("🎮 Initializing game...")
         self.game.initialiseGame()
 
-        actions = ['up', 'left', 'right', 'fire']
+        actions = ['up', 'left', 'right', 'fire', 'changeWeapon']
         num_actions = len(actions)
         action = actions[0] # default first action to fire
         clock = pygame.time.Clock()
@@ -230,7 +231,7 @@ class Agent():
                 elif state_hash[1] == '1' and state_hash[2] in ['1', '2']:  # Rock in view and close
                     action_idx = 3  # Fire
                 elif state_hash[1] == '1':  # Rock in view but not close
-                    action_idx = random.choice([1, 2])  # Left or Right to adjust aim
+                    action_idx = random.choice([1, 2, 4])  # Left or Right to adjust aim
                 elif state_hash[2] == '1':  # Rock mid-range, chase it
                     action_idx = 0  # Thrust (up)
                 else:
@@ -255,6 +256,7 @@ class Agent():
                 print(f"Frame {frame_count}: {action}")
                 print("Ship:", obs['ship']['position'].x, obs['ship']['position'].y)
                 print("Rock:", obs['rocks'][0]['position'].x, obs['rocks'][0]['position'].y)
+                print("Current Weapon:", obs['ship']['currentWeapon'])
                 print("--------------")
 
             frame_count += 1
@@ -274,9 +276,10 @@ class Agent():
             clock = pygame.time.Clock()
             frame_count = 0
 
-        actions = ['up', 'left', 'right', 'fire']
+        actions = ['up', 'left', 'right', 'fire', 'changeWeapon']
         num_actions = len(actions)
         hist = []
+        quit = False
 
         for i in range(num_episodes):
             epsilon = 1 # reset epsilon a the start at each episode. reintroduce variety every game.
@@ -295,6 +298,9 @@ class Agent():
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         done = True
+                        quit = True
+                if quit == True:
+                    break
 
                 snapshot = hist.pop(0)
                 hash = snapshot[0]
@@ -323,9 +329,9 @@ class Agent():
                     elif hash[1] == '1' and hash[2] in ['1', '2']:  # Rock in view and close
                         next_action = 3  # Fire
                     elif hash[1] == '1':  # Rock in view but not close
-                        next_action = random.choice([1, 2])  # Left or Right to adjust aim
+                        next_action = random.choice([1, 2, 4])  # Left or Right to adjust aim or change weapon
                     elif hash[2] == '1':  # Rock mid-range, chase it
-                        next_action = 0  # Thrust (up)
+                        next_action = random.choice([0, 4])  # Thrust (up) or change weapon
                     else:
                         next_action = np.argmax(self.Q_table[hash])
 
@@ -352,7 +358,10 @@ class Agent():
                     pygame.display.flip()
 
                     frame_count += 1
-                    clock.tick(60)
+                    # clock.tick(60)
+            if quit:
+                print ("Quitting game early")
+                break
             print("---------------------------------")
             print(f'episode {i} completed at {datetime.now()} with the following q_table:')
             pprint.pprint(self.Q_table)
